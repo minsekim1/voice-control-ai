@@ -36,10 +36,10 @@ class TransparentWindow(QtWidgets.QWidget):
         self.setWindowTitle('MyWindow')
 
         # 라벨 설정
-        label = QtWidgets.QLabel(text, self)
-        label.setFont(font)
-        label.setStyleSheet("color: white; background: transparent;")
-        label.setAlignment(QtCore.Qt.AlignCenter)  # 텍스트 중앙 정렬
+        self.label = QtWidgets.QLabel(text, self)
+        self.label.setFont(font)
+        self.label.setStyleSheet("color: white; background: transparent;")
+        self.label.setAlignment(QtCore.Qt.AlignCenter)
 
         self.show()
 
