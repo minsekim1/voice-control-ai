@@ -9,7 +9,7 @@ def onVoice():
 
 def main():
     app = QtWidgets.QApplication(sys.argv)
-    ex = TransparentWindow(onVoice)
+    ex = TransparentWindow(onVoice, 40, 40)
     
     # Ctrl+C를 처리할 수 있도록 QTimer 설정
     timer = QtCore.QTimer()
