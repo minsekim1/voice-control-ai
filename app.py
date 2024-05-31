@@ -1,16 +1,33 @@
-import tkinter as tk
+from PyQt5 import QtWidgets, QtCore, QtGui
 
-def main():
-    root = tk.Tk()
-    root.title("Voice Status")
+class TransparentWindow(QtWidgets.QWidget):
+    def __init__(self):
+        super().__init__()
+        self.initUI()
+    
+    def initUI(self):
+        self.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.WindowStaysOnTopHint)
+        self.setAttribute(QtCore.Qt.WA_TranslucentBackground)
+        self.setGeometry(100, 100, 400, 200)  # 창 위치와 크기 설정
 
-    # 화면 중앙에 위치
-    root.eval('tk::PlaceWindow . center')
+        layout = QtWidgets.QVBoxLayout()
+        label = QtWidgets.QLabel("on Voice", self)
+        label.setFont(QtGui.QFont('Arial', 30, QtGui.QFont.Bold))
+        label.setStyleSheet("color: white; background: transparent;")  # 텍스트 색상을 흰색으로 설정
+        
+        # 텍스트에 그림자 효과 추가
+        shadow = QtWidgets.QGraphicsDropShadowEffect()
+        shadow.setBlurRadius(15)
+        shadow.setColor(QtGui.QColor('black'))
+        shadow.setOffset(1, 1)
+        label.setGraphicsEffect(shadow)
 
-    label = tk.Label(root, text="on Voice", font=('Helvetica', 18, 'bold'))
-    label.pack(pady=20)  # 패딩으로 위젯 주변에 여백 추가
+        layout.addWidget(label)
 
-    root.mainloop()
+        self.setLayout(layout)
+        self.show()
 
-if __name__ == "__main__":
-    main()
+if __name__ == '__main__':
+    app = QtWidgets.QApplication([])
+    ex = TransparentWindow()
+    app.exec_()
