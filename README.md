@@ -1,6 +1,8 @@
-# voice-control-ai
+# Summary
 
 voice controller for computer AI
+
+# How to use
 
 ## env execute
 
@@ -13,3 +15,13 @@ voice controller for computer AI
 ## program exit
 
 `Ctrl + C` or `command + C`
+
+# library
+
+## libray save
+
+`pip freeze > requirements.txt`
+
+## library install
+
+`pip install -r requirements.txt`
