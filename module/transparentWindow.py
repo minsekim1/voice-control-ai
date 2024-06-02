@@ -3,9 +3,10 @@ from PyQt5 import QtWidgets, QtCore, QtGui
 from typing import Callable
 
 class TransparentWindow(QtWidgets.QWidget):
-    def __init__(self, onVoice: Callable, right: Number, top: Number):
+    def __init__(self, onVoiceStart:Callable, onVoiceEnd: Callable, right: Number, top: Number):
         super().__init__()
-        self.onVoice = onVoice
+        self.onVoiceStart = onVoiceStart
+        self.onVoiceEnd = onVoiceEnd
         self.space_pressed = False
         self.initUI(right, top)
 
@@ -46,8 +47,8 @@ class TransparentWindow(QtWidgets.QWidget):
     def keyPressEvent(self, event):
         if event.key() == QtCore.Qt.Key_Space and not self.space_pressed:
             self.label.setStyleSheet("color: red; background: transparent;")
-            self.onVoice()
             self.space_pressed = True
+            self.onVoiceStart()
         elif (event.modifiers() & (QtCore.Qt.ControlModifier | QtCore.Qt.MetaModifier)) and event.key() == QtCore.Qt.Key_C:
             self.close()
 
@@ -55,3 +56,4 @@ class TransparentWindow(QtWidgets.QWidget):
         if event.key() == QtCore.Qt.Key_Space:
             self.label.setStyleSheet("color: white; background: transparent;")
             self.space_pressed = False
+            self.onVoiceEnd()
