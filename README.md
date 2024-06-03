@@ -16,6 +16,10 @@ voice controller for computer AI
 
 `Ctrl + C` or `command + C`
 
+## Google Speech to Text Auth Enroll
+
+`export GOOGLE_APPLICATION_CREDENTIALS="path/to/service-account-file.json"`
+
 # library
 
 ## libray save
