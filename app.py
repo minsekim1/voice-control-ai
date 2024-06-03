@@ -1,4 +1,6 @@
 import sys
+
+from GoogleCloudSpeech import GoogleCloudSpeech
 sys.path.insert(0, './module')
 
 from PyQt5 import QtWidgets, QtCore
@@ -23,6 +25,11 @@ def onVoiceEnd():
     print("END")
     recorder.stop_recording()
     timer.stop()
+    
+    # GoogleCloudSpeech를 사용하여 녹음된 파일을 텍스트로 변환
+    transcriber = GoogleCloudSpeech()
+    transcription = transcriber.get_transcription("output.wav")
+    print("Transcription:", transcription)
 
 def record_chunk():
     recorder.record_chunk()
