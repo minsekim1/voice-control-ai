@@ -1,10 +1,11 @@
-# googleCloudSpeech.py
 import io
 from google.cloud import speech
+from google.oauth2 import service_account
 
 class GoogleCloudSpeech:
-    def __init__(self):
-        self.client = speech.SpeechClient()
+    def __init__(self, credentials_path):
+        credentials = service_account.Credentials.from_service_account_file(credentials_path)
+        self.client = speech.SpeechClient(credentials=credentials)
 
     def transcribe_audio(self, audio_file_path):
         with io.open(audio_file_path, 'rb') as audio_file:
