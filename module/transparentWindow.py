@@ -41,7 +41,7 @@ class TransparentWindow(QtWidgets.QWidget):
             self.label.setStyleSheet("color: red; background: transparent;")
             self.space_pressed = True
             self.onVoiceStart()
-            print("Space pressed")  # 디버그 출력 추가
+            print("Space pressed")
         elif (event.modifiers() & (QtCore.Qt.ControlModifier | QtCore.Qt.MetaModifier)) and event.key() == QtCore.Qt.Key_C:
             self.close()
 
@@ -50,4 +50,4 @@ class TransparentWindow(QtWidgets.QWidget):
             self.label.setStyleSheet("color: white; background: transparent;")
             self.space_pressed = False
             self.onVoiceEnd()
-            print("Space released")  # 디버그 출력 추가
+            print("Space released")
