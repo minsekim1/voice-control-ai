@@ -71,6 +71,7 @@ class AudioRecorder:
             try:
                 data = self.stream.read(self.chunk, exception_on_overflow=False)
                 self.frames.append(data)
+                print(f"Recording chunk, total frames: {len(self.frames)}")  # 디버그 출력 추가
             except Exception as e:
                 print(f"Error recording chunk: {e}")
 

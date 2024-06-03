@@ -16,7 +16,8 @@ def onVoiceStart():
     
     input_device = input_list[0]['index']
     recorder.start_recording(input_device)
-    timer.start(100)  # 100ms마다 chunk를 기록하도록 타이머 시작
+    timer.start(10)  # 10ms마다 chunk를 기록하도록 타이머 시작
+    print("Timer started")
 
 def onVoiceEnd():
     print("END")
