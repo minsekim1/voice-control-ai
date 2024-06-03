@@ -18,7 +18,7 @@ voice controller for computer AI
 
 ## Google Speech to Text Auth Enroll
 
-`export GOOGLE_APPLICATION_CREDENTIALS="path/to/service-account-file.json"`
+`export GOOGLE_APPLICATION_CREDENTIALS="./service-account-file.json"`
 
 # library
 
