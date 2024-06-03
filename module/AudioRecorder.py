@@ -59,12 +59,15 @@ class AudioRecorder:
             self.stream = None
 
         if self.frames:
-            with wave.open(self.filename, 'wb') as wf:
-                wf.setnchannels(self.channels)
-                wf.setsampwidth(self.audio.get_sample_size(self.format))
-                wf.setframerate(self.rate)
-                wf.writeframes(b''.join(self.frames))
-            print(f"Recording stopped, saved to {self.filename}")
+            try:
+                with wave.open(self.filename, 'wb') as wf:
+                    wf.setnchannels(self.channels)
+                    wf.setsampwidth(self.audio.get_sample_size(self.format))
+                    wf.setframerate(self.rate)
+                    wf.writeframes(b''.join(self.frames))
+                print(f"Recording stopped, saved to {self.filename}")
+            except Exception as e:
+                print(f"Failed to save recording: {e}")
 
     def record_chunk(self):
         if self.stream:

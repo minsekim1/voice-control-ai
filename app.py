@@ -1,5 +1,4 @@
 import sys
-
 sys.path.insert(0, './module')
 
 from GoogleCloudSpeech import GoogleCloudSpeech
@@ -16,9 +15,10 @@ def onVoiceStart():
         print("ERR: no input device")
         return
     
-    input_device = input_list[0]['index']
+    input_index = 3
+    input_device = input_list[input_index]['index']
     recorder.start_recording(input_device)
-    timer.start(100)  # 100ms마다 chunk를 기록하도록 타이머 시작
+    timer.start(1)  # 100ms마다 chunk를 기록하도록 타이머 시작
     print("Timer started")
 
 def onVoiceEnd():
@@ -27,10 +27,10 @@ def onVoiceEnd():
     timer.stop()
     
     # GoogleCloudSpeech를 사용하여 녹음된 파일을 텍스트로 변환
-    # credentials_path = "/path/to/your-service-account-file.json"  # 실제 자격 증명 파일 경로로 변경
-    # transcriber = GoogleCloudSpeech(credentials_path)
-    # transcription = transcriber.get_transcription("output.wav")
-    # print("Transcription:", transcription)
+    credentials_path = "./service-account-file.json"  # 실제 자격 증명 파일 경로로 변경
+    transcriber = GoogleCloudSpeech(credentials_path)
+    transcription = transcriber.get_transcription("output.wav")
+    print("Transcription:", transcription)
 
 def record_chunk():
     recorder.record_chunk()
