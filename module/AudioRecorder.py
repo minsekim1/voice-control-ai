@@ -123,18 +123,20 @@ class AudioRecorder:
         # transcription = transcriber.get_transcription("output.wav")
         # print("Transcription:", transcription)
 
-        # 2. GPT 클래스를 사용하여 API 호출
-        gpt = GPT()
-        try:
-            response_text = gpt.get_completion(transcription)
-            print("GPT Response:", response_text)
-        except Exception as e:
-            print("Failed to get response from GPT:", e)
+        # # 2. GPT 클래스를 사용하여 API 호출
+        # gpt = GPT()  # API 키가 클래스 생성 시 지정되어 있음.
+        # response_text = ""
+        # try:
+        #     response_text = gpt.get_chat_completion(transcription)
+        #     print("GPT Response:", response_text)
+        # except Exception as e:
+        #     print("Failed to get response from GPT:", e)
+        #     response_text = f"Error while fetching GPT response: {str(e)}"
 
-        # 3. 텍스트 파일에 저장
+        # 텍스트 파일에 저장
         with open("output.txt", "w") as f:
             f.write(f"Transcription: {transcription}\n")
-            f.write(f"GPT Response: {response_text}\n")
+            # f.write(f"GPT Response: {response_text}\n")
         print("Transcription and GPT response saved to output.txt")
 
     def record_chunk(self):
