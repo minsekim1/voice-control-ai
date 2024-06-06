@@ -82,15 +82,6 @@ class AudioRecorder:
             except Exception as e:
                 print(f"Failed to save recording: {e}")
 
-    def record_chunk(self):
-        if self.stream:
-            try:
-                data = self.stream.read(self.chunk, exception_on_overflow=False)
-                self.frames.append(data)
-                print(f"Recording chunk, total frames: {len(self.frames)}")
-            except Exception as e:
-                print(f"Error recording chunk: {e}")
-
     def terminate(self):
         self.audio.terminate()
 
@@ -144,6 +135,5 @@ class AudioRecorder:
             try:
                 data = self.stream.read(self.chunk, exception_on_overflow=False)
                 self.frames.append(data)
-                print(f"Recording chunk, total frames: {len(self.frames)}")
             except Exception as e:
                 print(f"Error recording chunk: {e}")
