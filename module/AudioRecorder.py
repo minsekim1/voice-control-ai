@@ -5,6 +5,7 @@ import sys
 from PyQt5 import QtCore, QtWidgets
 from uuid import uuid4
 
+from GPT import GPT
 from PythonSpeechRecognition import PythonSpeechRecognition
 
 class AudioRecorder:
@@ -111,16 +112,30 @@ class AudioRecorder:
         self.stop_recording()
         self.timer.stop()
         
-        #옵션1 GoogleCloudSpeech를 사용하여 녹음된 파일을 텍스트로 변환
+        # 1-1. PythonSpeechRecognition을 사용하여 녹음된 파일을 텍스트로 변환
+        transcriber = PythonSpeechRecognition()
+        transcription = transcriber.transcribe_audio("output.wav")
+        print("Transcription:", transcription)
+
+        # 1-2(옵션). GoogleCloudSpeech를 사용하여 녹음된 파일을 텍스트로 변환
         # credentials_path = "./service-account-file.json"  # 실제 자격 증명 파일 경로로 변경
         # transcriber = GoogleCloudSpeech(credentials_path)
         # transcription = transcriber.get_transcription("output.wav")
         # print("Transcription:", transcription)
 
-        #옵션2 PythonSpeechRecognition을 사용하여 녹음된 파일을 텍스트로 변환
-        transcriber = PythonSpeechRecognition()
-        transcription = transcriber.transcribe_audio("output.wav")
-        print("Transcription:", transcription)
+        # 2. GPT 클래스를 사용하여 API 호출
+        gpt = GPT()
+        try:
+            response_text = gpt.get_completion(transcription)
+            print("GPT Response:", response_text)
+        except Exception as e:
+            print("Failed to get response from GPT:", e)
+
+        # 3. 텍스트 파일에 저장
+        with open("output.txt", "w") as f:
+            f.write(f"Transcription: {transcription}\n")
+            f.write(f"GPT Response: {response_text}\n")
+        print("Transcription and GPT response saved to output.txt")
 
     def record_chunk(self):
         if self.stream:
