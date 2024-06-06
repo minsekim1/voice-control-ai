@@ -1,6 +1,11 @@
 import pyaudio
 import wave
 import os
+import sys
+from PyQt5 import QtCore, QtWidgets
+from uuid import uuid4
+
+from PythonSpeechRecognition import PythonSpeechRecognition
 
 class AudioRecorder:
     def __init__(self, filename="output.wav", format=pyaudio.paInt16, channels=1, rate=44100, chunk=2048, input_device_index=None):
@@ -13,6 +18,13 @@ class AudioRecorder:
         self.audio = pyaudio.PyAudio()
         self.stream = None
         self.frames = []
+
+        self.timer = QtCore.QTimer()
+        self.timer.timeout.connect(self.record_chunk)
+
+        self.exit_timer = QtCore.QTimer()
+        self.exit_timer.start(500)
+        self.exit_timer.timeout.connect(lambda: None) 
 
     def get_inputs_list(self):
         info = self.audio.get_host_api_info_by_index(0)
@@ -80,3 +92,41 @@ class AudioRecorder:
 
     def terminate(self):
         self.audio.terminate()
+
+    def onVoiceStart(self):
+        print("Start")
+        input_list = self.get_inputs_list()
+        if len(input_list) == 0:
+            print("ERR: no input device")
+            return
+        
+        input_index = 3
+        input_device = input_list[input_index]['index']
+        self.start_recording(input_device)
+        self.timer.start(1)  # 100ms마다 chunk를 기록하도록 타이머 시작
+        print("Timer started")
+
+    def onVoiceEnd(self):
+        print("END")
+        self.stop_recording()
+        self.timer.stop()
+        
+        #옵션1 GoogleCloudSpeech를 사용하여 녹음된 파일을 텍스트로 변환
+        # credentials_path = "./service-account-file.json"  # 실제 자격 증명 파일 경로로 변경
+        # transcriber = GoogleCloudSpeech(credentials_path)
+        # transcription = transcriber.get_transcription("output.wav")
+        # print("Transcription:", transcription)
+
+        #옵션2 PythonSpeechRecognition을 사용하여 녹음된 파일을 텍스트로 변환
+        transcriber = PythonSpeechRecognition()
+        transcription = transcriber.transcribe_audio("output.wav")
+        print("Transcription:", transcription)
+
+    def record_chunk(self):
+        if self.stream:
+            try:
+                data = self.stream.read(self.chunk, exception_on_overflow=False)
+                self.frames.append(data)
+                print(f"Recording chunk, total frames: {len(self.frames)}")
+            except Exception as e:
+                print(f"Error recording chunk: {e}")
