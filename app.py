@@ -1,6 +1,7 @@
 import sys
 sys.path.insert(0, './module')
 
+from PythonSpeechRecognition import PythonSpeechRecognition
 from GoogleCloudSpeech import GoogleCloudSpeech
 from PyQt5 import QtWidgets, QtCore
 from TransparentWindow import TransparentWindow
@@ -26,10 +27,15 @@ def onVoiceEnd():
     recorder.stop_recording()
     timer.stop()
     
-    # GoogleCloudSpeech를 사용하여 녹음된 파일을 텍스트로 변환
+    #옵션1 GoogleCloudSpeech를 사용하여 녹음된 파일을 텍스트로 변환
     credentials_path = "./service-account-file.json"  # 실제 자격 증명 파일 경로로 변경
     transcriber = GoogleCloudSpeech(credentials_path)
     transcription = transcriber.get_transcription("output.wav")
+    print("Transcription:", transcription)
+
+    #옵션2 PythonSpeechRecognition을 사용하여 녹음된 파일을 텍스트로 변환
+    transcriber = PythonSpeechRecognition()
+    transcription = transcriber.transcribe_audio("output.wav")
     print("Transcription:", transcription)
 
 def record_chunk():

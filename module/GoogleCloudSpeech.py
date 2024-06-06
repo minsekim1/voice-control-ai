@@ -15,7 +15,7 @@ class GoogleCloudSpeech:
         config = speech.RecognitionConfig(
             encoding=speech.RecognitionConfig.AudioEncoding.LINEAR16,
             sample_rate_hertz=44100,
-            language_code='en-US'
+            language_code='ko-KR'
         )
 
         response = self.client.recognize(config=config, audio=audio)

@@ -10,7 +10,7 @@ voice controller for computer AI
 
 ## program execute
 
-`python3 app.py`
+`python app.py`
 
 ## program exit
 

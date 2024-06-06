@@ -3,7 +3,7 @@ from PyQt5 import QtWidgets, QtCore, QtGui
 from typing import Callable
 
 class TransparentWindow(QtWidgets.QWidget):
-    def __init__(self, onVoiceStart:Callable, onVoiceEnd: Callable, right: Number, top: Number):
+    def __init__(self, onVoiceStart: Callable, onVoiceEnd: Callable, right: Number, top: Number):
         super().__init__()
         self.onVoiceStart = onVoiceStart
         self.onVoiceEnd = onVoiceEnd
@@ -37,17 +37,14 @@ class TransparentWindow(QtWidgets.QWidget):
         self.show()
 
     def keyPressEvent(self, event):
-        if event.key() == QtCore.Qt.Key_Space and not self.space_pressed:
-            self.label.setStyleSheet("color: red; background: transparent;")
-            self.space_pressed = True
-            self.onVoiceStart()
-            print("Space pressed")
-        elif (event.modifiers() & (QtCore.Qt.ControlModifier | QtCore.Qt.MetaModifier)) and event.key() == QtCore.Qt.Key_C:
-            self.close()
-
-    def keyReleaseEvent(self, event):
         if event.key() == QtCore.Qt.Key_Space:
-            self.label.setStyleSheet("color: white; background: transparent;")
-            self.space_pressed = False
-            self.onVoiceEnd()
-            print("Space released")
+            if not self.space_pressed:
+                self.label.setStyleSheet("color: red; background: transparent;")
+                self.space_pressed = True
+                self.onVoiceStart()
+                print("Space pressed: Start recording")
+            else:
+                self.label.setStyleSheet("color: white; background: transparent;")
+                self.space_pressed = False
+                self.onVoiceEnd()
+                print("Space pressed: Stop recording")
