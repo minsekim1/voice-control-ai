@@ -43,7 +43,7 @@ def execute_command(command):
         os.system("shutdown /r /t 1")
     elif "컴퓨터 종료" in command:
         os.system("shutdown /s /t 1")
-    elif "컴퓨 절전" in command:
+    elif "컴퓨터 절전" in command:
         os.system("rundll32.exe powrprof.dll,SetSuspendState 0,1,0")
     elif "작업 관리자" in command:
         os.system("taskmgr")
@@ -61,7 +61,7 @@ def execute_command(command):
         os.system("appwiz.cpl")
     elif "방화벽 설정" in command:
         os.system("firewall.cpl")
-    elif "보안 및 유지관리" in command:
+    elif "윈도우 보안" in command:
         os.system("wscui.cpl")
     elif "전원 옵션" in command:
         os.system("powercfg.cpl")
@@ -75,7 +75,7 @@ def execute_command(command):
         os.system("control userpasswords2")
     elif "화면 해상도" in command:
         os.system("desk.cpl")
-    elif "커맨드 프롬프트" in command:
+    elif "프롬프트" in command:
         os.system("cmd")
     elif "종료" in command:
         sys.exit()
