@@ -23,17 +23,16 @@ def listen_print_loop(responses):
             continue
 
         result = response.results[0]
-        if not result.alternatives:
+        if not result.alternatives or transcript == result.alternatives[0].transcript:
             continue
 
         # 가장 가능성 높은 대안 출력
-        if transcript != result.alternatives[0].transcript:
-            transcript = result.alternatives[0].transcript
-            print('Transcript: {}'.format(transcript))
-            if len(transcript) > 1 :
-                is_command = execute_command(transcript)
-                if is_command == True :
-                    transcript = ""
+        transcript = result.alternatives[0].transcript
+        print('Transcript: {}'.format(transcript))
+        if len(transcript) > 1 :
+            is_command = execute_command(transcript)
+            if is_command == True :
+                transcript = ""
 
 def stt_start():
     client = initialize_client()
