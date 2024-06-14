@@ -1,5 +1,6 @@
 
 import os
+import subprocess
 import sys
 import pyautogui
 import webbrowser  # 웹 브라우저를 제어하기 위한 모듈
@@ -46,15 +47,15 @@ def execute_command(command):
     elif "컴퓨터 절전" in command:
         os.system("rundll32.exe powrprof.dll,SetSuspendState 0,1,0")
     elif "작업 관리자" in command:
-        os.system("taskmgr")
+        subprocess.run(["./module/script/작업 관리자.bat"], shell=True)
     elif "디스크 정리" in command:
-        os.system("cleanmgr")
+        subprocess.run(["./module/script/디스크 정리.bat"], shell=True)
     elif "이벤트 뷰어" in command:
-        os.system("eventvwr.msc")
+        subprocess.run(["./module/script/이벤트 뷰어.bat"], shell=True)
     elif "장치 관리자" in command:
-        os.system("devmgmt.msc")
+        subprocess.run(["./module/script/장치 관리자.bat"], shell=True)
     elif "네트워크 연결" in command:
-        os.system("ncpa.cpl")
+         subprocess.run(["./module/script/네트워크 연결.bat"], shell=True)
     elif "시스템 정보" in command:
         os.system("msinfo32")
     elif "프로그램 추가/제거" in command:
