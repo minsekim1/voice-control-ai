@@ -13,11 +13,7 @@ def recognizeSpeech(recognizer, microphone):
         print("You said: {}".format(text))
         
         # 특정 명령어가 텍스트에 포함되어 있으면 프로그램 종료
-        exit_commands = ["나가기", "종료", "닫기", "끄기", "꺼 줘"]
-        for command in exit_commands:
-            if command in text:
-                print("Exiting program as per the command.")
-                sys.exit()
+        exitProgram(text)
             
     # except sr.UnknownValueError:
     #     print("Google Speech Recognition could not understand audio")
@@ -25,7 +21,7 @@ def recognizeSpeech(recognizer, microphone):
         # print("Could not request results from Google Speech Recognition service; {0}".format(e))
         print("No message")
         
-
+# STT 서비스 시작하기
 def sttStart():
 		recognizer = sr.Recognizer()
 		microphone = sr.Microphone(sample_rate=16000)
@@ -33,3 +29,12 @@ def sttStart():
 		
 		while True:
 				recognizeSpeech(recognizer, microphone)
+                            
+
+# 특정 명령어가 텍스트에 포함되어 있으면 프로그램 종료
+def exitProgram(text):
+		exit_commands = ["나가기", "종료", "닫기", "끄기", "꺼 줘"]
+		for command in exit_commands:
+				if command in text:
+						print("프로그램을 종료합니다.")
+						sys.exit()
