@@ -19,7 +19,7 @@ def execute_command(command):
         os.system("shutdown /r /t 1")
     elif "컴퓨터 종료" in command:
         os.system("shutdown /s /t 1")
-    elif "절전 모드" in command:
+    elif "컴퓨 절전" in command:
         os.system("rundll32.exe powrprof.dll,SetSuspendState 0,1,0")
     elif "작업 관리자" in command:
         os.system("taskmgr")
@@ -53,7 +53,7 @@ def execute_command(command):
         os.system("desk.cpl")
     elif "커맨드 프롬프트" in command:
         os.system("cmd")
-    elif "프로그램 종료" in command:
+    elif "종료" in command:
         sys.exit()
     else:
         return False
