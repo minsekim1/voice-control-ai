@@ -2,7 +2,8 @@ import os
 from google.cloud import speech
 import pyaudio
 
-from catch_vocie import execute_command
+from catch_voice import execute_command
+
 
 # 중복 단어 무시용 변수
 transcript = ""
