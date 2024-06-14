@@ -1,71 +1,102 @@
+import tkinter as tk
+from tkinter import ttk
+import pyaudio
 import audioop
 import threading
-import pyaudio
 import time
+import speech_recognition as sr
 
 class MicController:
     def __init__(self, threshold=500):
         self.p = pyaudio.PyAudio()
+        self.recognizer = sr.Recognizer()
         self.threshold = threshold
         self.common_sample_rates = [8000, 16000, 22050, 44100, 48000]
         self.result = []
 
-    def test_sample_rate(self, device_info, rate, i):
-        try:
-            if not self.p.is_format_supported(rate,
-                                              input_device=device_info['index'],
-                                              input_channels=1,
-                                              input_format=pyaudio.paInt16):
-                print(f"Sample rate {rate} Hz not supported by {device_info['name']}")
-                return  # 지원하지 않는 샘플 레이트는 테스트하지 않음
-        except ValueError as e:
-            return  # 에러 발생 시, 다음 샘플 레이트로 넘어감
+    def get_device_list(self):
+        num_devices = self.p.get_device_count()
+        devices = []
+        for i in range(num_devices):
+            device_info = self.p.get_device_info_by_index(i)
+            if device_info['maxInputChannels'] > 0:
+                devices.append((device_info['name'], i))
+        return devices
 
+    def test_sample_rate(self, device_index, rate):
         try:
             stream = self.p.open(format=pyaudio.paInt16,
                                  channels=1,
                                  rate=rate,
                                  input=True,
-                                 input_device_index=device_info['index'],
+                                 input_device_index=device_index,
                                  frames_per_buffer=1024)
             data = stream.read(1024)
             rms = audioop.rms(data, 2)
             stream.close()
-
-            if rms > self.threshold:
-                self.result.append((device_info['name'], device_info['index'], rate, rms))
+            return rms
         except Exception as e:
-            print(f"ERR: stream at [{i}]{rate}Hz:{str(e)} {device_info['name'][:20]}")
+            print(f"Failed to open stream at {rate} Hz: {str(e)}")
+            return 0
 
-    def find_uniq_active_microphone(self):
-        attempt = 0
-        while attempt < 20:
-            self.result = []
-            num_devices = self.p.get_device_count()
-            threads = []
-
-            for i in range(num_devices):
-                device_info = self.p.get_device_info_by_index(i)
-                if not device_info['maxInputChannels'] > 0:
-                    continue
-
-                for rate in self.common_sample_rates:
-                    thread = threading.Thread(target=self.test_sample_rate, args=(device_info, rate, i))
-                    threads.append(thread)
-                    thread.start()
-
-            for thread in threads:
-                thread.join()
-
-            if self.result:
-                sorted_results = sorted(self.result, key=lambda x: x[3], reverse=True)
-                return sorted_results[0][0], sorted_results[0][1], sorted_results[0][2]  # 반환: 마이크 이름, 인덱스, 샘플 레이트
-
-            time.sleep(0.3)
-            attempt += 1
-
-        self.terminate()
-        return None, None, None
+    def get_volume(self, device_index):
+        for rate in self.common_sample_rates:
+            rms = self.test_sample_rate(device_index, rate)
+            if rms > 0:
+                return rms
+        return 0
 
     def terminate(self):
         self.p.terminate()
+
+class VolumeApp:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Microphone Volume Monitor")
+        self.mic_controller = MicController()
+
+        self.device_list = self.mic_controller.get_device_list()
+        self.selected_device = tk.StringVar(value=self.device_list[0][0])
+
+        self.create_widgets()
+        self.running = False
+
+    def create_widgets(self):
+        ttk.Label(self.root, text="Select Microphone:").grid(column=0, row=0, padx=10, pady=10)
+
+        self.device_combobox = ttk.Combobox(self.root, textvariable=self.selected_device, state="readonly")
+        self.device_combobox['values'] = [name for name, index in self.device_list]
+        self.device_combobox.grid(column=1, row=0, padx=10, pady=10)
+
+        self.start_button = ttk.Button(self.root, text="Start Monitoring", command=self.start_monitoring)
+        self.start_button.grid(column=0, row=1, padx=10, pady=10)
+
+        self.stop_button = ttk.Button(self.root, text="Stop Monitoring", command=self.stop_monitoring, state="disabled")
+        self.stop_button.grid(column=1, row=1, padx=10, pady=10)
+
+        self.volume_label = ttk.Label(self.root, text="Volume: 0")
+        self.volume_label.grid(column=0, row=2, columnspan=2, padx=10, pady=10)
+
+    def start_monitoring(self):
+        self.running = True
+        self.start_button.config(state="disabled")
+        self.stop_button.config(state="enabled")
+        self.monitor_volume()
+
+    def stop_monitoring(self):
+        self.running = False
+        self.start_button.config(state="enabled")
+        self.stop_button.config(state="disabled")
+
+    def monitor_volume(self):
+        if self.running:
+            device_index = next(index for name, index in self.device_list if name == self.selected_device.get())
+            volume = self.mic_controller.get_volume(device_index)
+            self.volume_label.config(text=f"Volume: {volume}")
+            self.root.after(100, self.monitor_volume)
+
+    def on_closing(self):
+        self.mic_controller.terminate()
+        self.root.destroy()
+
+
