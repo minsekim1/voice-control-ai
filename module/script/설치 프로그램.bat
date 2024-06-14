@@ -1,2 +1,2 @@
 @echo off
-appwiz.cpl
+start appwiz.cpl

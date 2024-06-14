@@ -1,2 +1,2 @@
 @echo off
-cleanmgr
+start cleanmgr

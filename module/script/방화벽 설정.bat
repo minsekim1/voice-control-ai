@@ -1,2 +1,2 @@
 @echo off
-firewall.cpl
+start firewall.cpl

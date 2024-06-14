@@ -21,10 +21,20 @@ def execute_command(command):
     
     # command가 last_commands로 시작하는 경우, 시작 부분 제거
     if command.startswith(last_commands):
-        # last_commands 길이만큼 command에서 제거
         command = command[len(last_commands):].strip()
 
     # 음성 명령에 따라 특정 작업 수행
+    current_directory = os.path.dirname(os.path.abspath(__file__))
+    script_directory = os.path.join(current_directory, "script")  # 정확한 경로 구성
+    scripts = load_scripts_from_directory(script_directory)
+    for script_name, script_path in scripts.items():
+        if script_name in command.lower():
+            subprocess.run(["cmd.exe", "/c", script_path], shell=True)
+            # print(f"{script_name} script executed.")
+            last_commands = command
+            recent_commands = command
+            return True
+        
     if "여보세요" in command:
         print("BOT: 안녕?")
     elif "유튜브" in command:
@@ -36,48 +46,6 @@ def execute_command(command):
     elif "스크린샷" in command:
         screenshot = pyautogui.screenshot()
         screenshot.save('screenshot.png')
-    elif "계산기" in command:
-         subprocess.run(["./module/script/계산기.bat"], shell=True)
-    elif "메모장" in command:
-         subprocess.run(["./module/script/메모장.bat"], shell=True)
-    elif "컴퓨터 재시작" in command:
-         subprocess.run(["./module/script/컴퓨터 재시작.bat"], shell=True)
-    elif "컴퓨터 종료" in command:
-         subprocess.run(["./module/script/컴퓨터 종료.bat"], shell=True)
-    elif "컴퓨터 절전" in command:
-         subprocess.run(["./module/script/컴퓨터 절전.bat"], shell=True)
-    elif "작업 관리자" in command:
-        subprocess.run(["./module/script/작업 관리자.bat"], shell=True)
-    elif "디스크 정리" in command:
-        subprocess.run(["./module/script/디스크 정리.bat"], shell=True)
-    elif "이벤트 뷰어" in command:
-        subprocess.run(["./module/script/이벤트 뷰어.bat"], shell=True)
-    elif "장치 관리자" in command:
-        subprocess.run(["./module/script/장치 관리자.bat"], shell=True)
-    elif "네트워크 연결" in command:
-         subprocess.run(["./module/script/네트워크 연결.bat"], shell=True)
-    elif "시스템 정보" in command:
-        subprocess.run(["./module/script/시스템 정보.bat"], shell=True)
-    elif "설치 프로그램" in command:
-        subprocess.run(["./module/script/설치 프로그램.bat"], shell=True)
-    elif "방화벽 설정" in command:
-        subprocess.run(["./module/script/방화벽 설정.bat"], shell=True)
-    elif "윈도우 보안" in command:
-        subprocess.run(["./module/script/윈도우 보안.bat"], shell=True)
-    elif "전원 옵션" in command:
-        subprocess.run(["./module/script/전원 옵션.bat"], shell=True)
-    elif "시스템 속성" in command:
-        subprocess.run(["./module/script/시스템 속성.bat"], shell=True)
-    elif "서비스" in command:
-        subprocess.run(["./module/script/서비스.bat"], shell=True)
-    elif "성능 모니터" in command:
-        subprocess.run(["./module/script/성능 모니터.bat"], shell=True)
-    elif "사용자 계정" in command:
-        subprocess.run(["./module/script/사용자 계정.bat"], shell=True)
-    elif "화면 해상도" in command:
-        subprocess.run(["./module/script/화면 해상도.bat"], shell=True)
-    elif "프롬프트" in command:
-        subprocess.run(["./module/script/프롬프트.bat"], shell=True)
     elif "종료" in command:
         sys.exit()
     else:
@@ -86,3 +54,12 @@ def execute_command(command):
     last_commands = command
     recent_commands = command
     return True
+
+def load_scripts_from_directory(directory):
+    """디렉토리에서 스크립트 목록을 로드합니다."""
+    scripts = {}
+    for filename in os.listdir(directory):
+        if filename.endswith(".bat"):
+            script_name = filename[:-4]  # 확장자 '.bat' 제거
+            scripts[script_name.lower()] = os.path.join(directory, filename)
+    return scripts

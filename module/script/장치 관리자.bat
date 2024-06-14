@@ -1,2 +1,0 @@
-@echo off
-devmgmt.msc

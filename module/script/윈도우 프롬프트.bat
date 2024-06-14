@@ -1,2 +1,2 @@
 @echo off
-sysdm.cpl
+start cmd

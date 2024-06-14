@@ -1,2 +1,2 @@
 @echo off
-control userpasswords2
+start control userpasswords2

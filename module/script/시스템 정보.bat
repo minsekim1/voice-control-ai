@@ -1,2 +1,2 @@
 @echo off
-msinfo32
+start msinfo32

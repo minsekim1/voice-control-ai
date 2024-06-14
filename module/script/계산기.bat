@@ -1,2 +1,2 @@
 @echo off
-calc
+start calc

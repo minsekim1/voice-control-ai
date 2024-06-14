@@ -1,2 +1,2 @@
 @echo off
-ncpa.cpl
+start ncpa.cpl

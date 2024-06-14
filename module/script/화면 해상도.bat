@@ -1,2 +1,2 @@
 @echo off
-desk.cpl
+start desk.cpl

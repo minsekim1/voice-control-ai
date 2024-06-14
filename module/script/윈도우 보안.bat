@@ -1,2 +1,2 @@
 @echo off
-wscui.cpl
+start wscui.cpl
