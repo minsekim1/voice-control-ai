@@ -25,27 +25,27 @@ def execute_command(command):
         command = command[len(last_commands):].strip()
 
     # 음성 명령에 따라 특정 작업 수행
-    if "메모장" in command:
-        os.system("notepad")
+    if "여보세요" in command:
+        print("BOT: 안녕?")
     elif "유튜브" in command:
         webbrowser.open("https://www.youtube.com")
     elif "네이버" in command:
         webbrowser.open("https://www.naver.com")
     elif "구글" in command:
         webbrowser.open("https://www.google.com")
-    elif "계산기" in command:
-        os.system("calc")
     elif "스크린샷" in command:
         screenshot = pyautogui.screenshot()
         screenshot.save('screenshot.png')
-    elif "여보세요" in command:
-        print("BOT: 안녕?")
+    elif "계산기" in command:
+         subprocess.run(["./module/script/계산기.bat"], shell=True)
+    elif "메모장" in command:
+         subprocess.run(["./module/script/메모장.bat"], shell=True)
     elif "컴퓨터 재시작" in command:
-        os.system("shutdown /r /t 1")
+         subprocess.run(["./module/script/컴퓨터 재시작.bat"], shell=True)
     elif "컴퓨터 종료" in command:
-        os.system("shutdown /s /t 1")
+         subprocess.run(["./module/script/컴퓨터 종료.bat"], shell=True)
     elif "컴퓨터 절전" in command:
-        os.system("rundll32.exe powrprof.dll,SetSuspendState 0,1,0")
+         subprocess.run(["./module/script/컴퓨터 절전.bat"], shell=True)
     elif "작업 관리자" in command:
         subprocess.run(["./module/script/작업 관리자.bat"], shell=True)
     elif "디스크 정리" in command:
