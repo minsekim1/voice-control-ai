@@ -2,12 +2,28 @@
 import os
 import sys
 import pyautogui
+import webbrowser  # 웹 브라우저를 제어하기 위한 모듈
+
+# 최근 실행된 명령어를 저장
+recent_commands = ""
 
 # 음성인식을 진행합니다.
 def execute_command(command):
+    global recent_commands  # 전역 변수 사용
+
+    # 명령어가 최근 실행된 명령어 세트에 있는지 확인
+    if command == recent_commands:
+        return False
+
     # 음성 명령에 따라 특정 작업 수행
     if "메모장" in command:
         os.system("notepad")
+    elif "유튜브" in command:
+        webbrowser.open("https://www.youtube.com")
+    elif "네이버" in command:
+        webbrowser.open("https://www.naver.com")
+    elif "구글" in command:
+        webbrowser.open("https://www.google.com")
     elif "계산기" in command:
         os.system("calc")
     elif "스크린샷" in command:
@@ -57,4 +73,5 @@ def execute_command(command):
         sys.exit()
     else:
         return False
+    recent_commands = command
     return True
