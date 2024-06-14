@@ -57,27 +57,27 @@ def execute_command(command):
     elif "네트워크 연결" in command:
          subprocess.run(["./module/script/네트워크 연결.bat"], shell=True)
     elif "시스템 정보" in command:
-        os.system("msinfo32")
-    elif "프로그램 추가/제거" in command:
-        os.system("appwiz.cpl")
+        subprocess.run(["./module/script/시스템 정보.bat"], shell=True)
+    elif "설치 프로그램" in command:
+        subprocess.run(["./module/script/설치 프로그램.bat"], shell=True)
     elif "방화벽 설정" in command:
-        os.system("firewall.cpl")
+        subprocess.run(["./module/script/방화벽 설정.bat"], shell=True)
     elif "윈도우 보안" in command:
-        os.system("wscui.cpl")
+        subprocess.run(["./module/script/윈도우 보안.bat"], shell=True)
     elif "전원 옵션" in command:
-        os.system("powercfg.cpl")
+        subprocess.run(["./module/script/전원 옵션.bat"], shell=True)
     elif "시스템 속성" in command:
-        os.system("sysdm.cpl")
+        subprocess.run(["./module/script/시스템 속성.bat"], shell=True)
     elif "서비스" in command:
-        os.system("services.msc")
+        subprocess.run(["./module/script/서비스.bat"], shell=True)
     elif "성능 모니터" in command:
-        os.system("perfmon.msc")
+        subprocess.run(["./module/script/성능 모니터.bat"], shell=True)
     elif "사용자 계정" in command:
-        os.system("control userpasswords2")
+        subprocess.run(["./module/script/사용자 계정.bat"], shell=True)
     elif "화면 해상도" in command:
-        os.system("desk.cpl")
+        subprocess.run(["./module/script/화면 해상도.bat"], shell=True)
     elif "프롬프트" in command:
-        os.system("cmd")
+        subprocess.run(["./module/script/프롬프트.bat"], shell=True)
     elif "종료" in command:
         sys.exit()
     else:
