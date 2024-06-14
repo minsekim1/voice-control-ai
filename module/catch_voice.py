@@ -39,24 +39,24 @@ def execute_command(command):
         print("BOT: 안녕?")
     elif "유튜브" in command:
         webbrowser.open("https://www.youtube.com")
-    elif "유튜브 검색" in command:
-        # "유튜브 검색" 다음에 오는 텍스트를 검색 쿼리로 추출
-        query = command.split("유튜브 검색", 1)[1].strip()
-        # URL 생성
-        url = f"https://www.youtube.com/results?search_query={query}"
-        # 웹 브라우저로 URL 열기
-        webbrowser.open(url)
-        return True
+    # elif "유튜브 검색" in command:
+    #     # "유튜브 검색" 다음에 오는 텍스트를 검색 쿼리로 추출
+    #     query = command.split("유튜브 검색", 1)[1].strip()
+    #     # URL 생성
+    #     url = f"https://www.youtube.com/results?search_query={query}"
+    #     # 웹 브라우저로 URL 열기
+    #     webbrowser.open(url)
+    #     return True
     elif "네이버" in command:
         webbrowser.open("https://www.naver.com")
-    elif "네이버 검색" in command:
-        # "네이버 검색" 다음에 오는 텍스트를 검색 쿼리로 추출
-        query = command.split("유튜브 검색", 1)[1].strip()
-        # URL 생성
-        url = f"https://search.naver.com/search.naver?query={query}"
-        # 웹 브라우저로 URL 열기
-        webbrowser.open(url)
-        return True
+    # elif "네이버 검색" in command:
+    #     # "네이버 검색" 다음에 오는 텍스트를 검색 쿼리로 추출
+    #     query = command.split("유튜브 검색", 1)[1].strip()
+    #     # URL 생성
+    #     url = f"https://search.naver.com/search.naver?query={query}"
+    #     # 웹 브라우저로 URL 열기
+    #     webbrowser.open(url)
+    #     return True
     elif "구글" in command:
         webbrowser.open("https://www.google.com")
     elif "스크린샷" in command:
