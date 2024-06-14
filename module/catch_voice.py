@@ -6,14 +6,22 @@ import webbrowser  # 웹 브라우저를 제어하기 위한 모듈
 
 # 최근 실행된 명령어를 저장
 recent_commands = ""
+last_commands = ""
 
 # 음성인식을 진행합니다.
 def execute_command(command):
-    global recent_commands  # 전역 변수 사용
+    # 전역 변수 사용
+    global last_commands  
+    global recent_commands
 
     # 명령어가 최근 실행된 명령어 세트에 있는지 확인
     if command == recent_commands:
         return False
+    
+    # command가 last_commands로 시작하는 경우, 시작 부분 제거
+    if command.startswith(last_commands):
+        # last_commands 길이만큼 command에서 제거
+        command = command[len(last_commands):].strip()
 
     # 음성 명령에 따라 특정 작업 수행
     if "메모장" in command:
@@ -73,5 +81,7 @@ def execute_command(command):
         sys.exit()
     else:
         return False
+        
+    last_commands = command
     recent_commands = command
     return True
