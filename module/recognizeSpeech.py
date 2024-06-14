@@ -1,4 +1,5 @@
 import os
+import subprocess
 import sys
 import speech_recognition as sr
 
@@ -17,11 +18,12 @@ def recognizeSpeech(recognizer, microphone):
         exitProgram(text)
 
 				# 메모장 키기
-        exit_commands = ["메모장"]
-        for command in exit_commands:
+        # 비동기(subprocess로 실행하여 음성인식 중단을 회피)
+        notepad_commands = ["메모장"]
+        for command in notepad_commands:
             if command in text:
                 print("메모장 프로그램을 실행합니다.")
-                os.system("notepad.exe")
+                subprocess.Popen(["notepad.exe"])
             
     except Exception as e:
         print("No message")
