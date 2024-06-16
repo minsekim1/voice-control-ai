@@ -29,7 +29,7 @@ def execute_command(command):
     scripts = load_scripts_from_directory(script_directory)
     for script_name, script_path in scripts.items():
         if script_name in command.lower():
-            subprocess.run(["cmd.exe", "/c", script_path], shell=True)
+            subprocess.run(["python", script_path], shell=True)
             # print(f"{script_name} script executed.")
             last_commands = command
             recent_commands = command
