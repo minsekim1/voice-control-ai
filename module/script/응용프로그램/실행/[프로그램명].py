@@ -2,10 +2,20 @@ import os
 import sys
 import subprocess
 
+# 변환 함수
+def convert_to_slack(input_string):
+    # 입력 문자열이 '슬랙', 'Slack', 'slack' 중 하나일 경우 'Slack'으로 변환
+    if input_string in ['slack', '슬랙']:
+        return 'slack'
+    if input_string in ['고클린', 'goclean']:
+        return 'goclean'
+    return input_string
+
 # 시작 프로그램을 실행하는 함수
 def run_program(program_name):
     try:
         # 프로그램 경로가 절대 경로인지 확인하고, 절대 경로가 아니라면 경로를 찾습니다.
+        program_name = convert_to_slack(program_name)
         if not os.path.isabs(program_name):
             # 기본 시작 프로그램 경로 설정
             start_menu_path = os.path.join(os.getenv('APPDATA'), r'Microsoft\Windows\Start Menu\Programs')
