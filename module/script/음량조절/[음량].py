@@ -26,3 +26,7 @@ if __name__ == "__main__":
         set_system_volume(sys.argv[1])
     else:
         print("음량 값을 숫자로 제공해주세요. 예: 50")
+
+
+# TODO
+# 음량 native 로 처리할 수 있게하기 -> 예: 백 -> 100으로 설정
