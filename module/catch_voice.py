@@ -111,8 +111,8 @@ def execute_command(command):
 # execute_command("나루토")
 
 # 화면 밝기 제어
-execute_command("화면밝기")
-execute_command("20")
+# execute_command("화면밝기")
+# execute_command("20")
 # execute_command("화면밝기")
 # execute_command("50")
 # execute_command("화면밝기")
@@ -126,5 +126,8 @@ execute_command("20")
 # execute_command("화면밝기")
 # execute_command("0")
 # execute_command("화면밝기")
-# execute_command("80")
+# execute_command("20")
 
+# 음량 제어
+# execute_command("음량조절")
+# execute_command("0")
