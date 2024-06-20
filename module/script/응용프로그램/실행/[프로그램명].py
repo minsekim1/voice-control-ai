@@ -18,7 +18,7 @@ def run_program(program_name):
                 if program_path:
                     break
             if program_path is None:
-                raise FileNotFoundError(f"프로그램을 찾을 수 없습니다: {program_name}")
+                raise FileNotFoundError(f"프로그램을 찾을 수 없습니다: {program_name} \n시작 프로그램에 등록되어있는지 확인해주세요.")
         else:
             program_path = program_name
 
