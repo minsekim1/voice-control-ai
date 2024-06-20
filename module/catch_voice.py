@@ -100,7 +100,7 @@ def execute_command(command):
     # 명령어 없을때 처리
     return False
 
-
+# 네이버/유튜브로 나루토 검색
 # execute_command("구글")
 # execute_command("뒤로가기")
 # execute_command("네이버")
@@ -109,4 +109,22 @@ def execute_command(command):
 # execute_command("유튜브")
 # execute_command("검색")
 # execute_command("나루토")
+
+# 화면 밝기 제어
+execute_command("화면밝기")
+execute_command("20")
+# execute_command("화면밝기")
+# execute_command("50")
+# execute_command("화면밝기")
+# execute_command("100")
+# execute_command("화면밝기")
+# execute_command("80")
+# execute_command("화면밝기")
+# execute_command("50")
+# execute_command("화면밝기")
+# execute_command("30")
+# execute_command("화면밝기")
+# execute_command("0")
+# execute_command("화면밝기")
+# execute_command("80")
 
