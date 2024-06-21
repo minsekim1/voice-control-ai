@@ -134,8 +134,10 @@ def execute_command(command):
 
 
 # 프로그램 즉시실행
-execute_command("응용프로그램")
-execute_command("실행")
-execute_command("GoClean")
+# execute_command("응용프로그램")
+# execute_command("실행")
+# execute_command("GoClean")
 # execute_command("Slack")
-# 프로그램 예약실행
+
+# 컴퓨터 절전
+execute_command("컴퓨터 절전")
