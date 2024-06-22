@@ -44,10 +44,12 @@ def list_files_and_folders(read_folder):
 # 음성인식을 진행합니다.
 def execute_command(voice_text):
     # 전역 변수 사용
+    global before_voice_text
     global read_folder
 
     # 디렉토리에서 스크립트와 폴더 목록을 로드합니다.
     voice_text = before_voice_text + voice_text
+    before_voice_text = voice_text
     scripts = list_files_and_folders(read_folder)
 
     # 일반 파일(명령어) / 폴더(경로 들어가기) 실행
