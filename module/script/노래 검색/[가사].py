@@ -1,8 +1,8 @@
 import sys
 import requests
-import json
 from bs4 import BeautifulSoup
 
+# 네이버 가사 검색을 활용합니다.
 def search_lyrics(query):
     url = "https://m.search.naver.com/p/csearch/content/qapirender.nhn"
     params = {
