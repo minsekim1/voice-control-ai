@@ -4,6 +4,10 @@ import subprocess
 import sys
 import re  # 정규 표현식 모듈 추가
 
+
+# 이전 음성 글자들을 포함해서 음성인식
+before_voice_text = ""
+
 # 음성 단계(폴더 위치)를 저장
 read_folder = []
 
@@ -38,17 +42,18 @@ def list_files_and_folders(read_folder):
     return items
 
 # 음성인식을 진행합니다.
-def execute_command(command):
+def execute_command(voice_text):
     # 전역 변수 사용
     global read_folder
 
     # 디렉토리에서 스크립트와 폴더 목록을 로드합니다.
+    voice_text = before_voice_text + voice_text
     scripts = list_files_and_folders(read_folder)
 
     # 일반 파일(명령어) / 폴더(경로 들어가기) 실행
     if debug_mode == True : print("일반 파일(명령어) / 폴더(경로 들어가기) 실행")
     for key, value in scripts.items():
-        if key in command.lower():
+        if key in voice_text.lower():
             if scripts[key] == "folder":
                 read_folder.append(key)  # 폴더 선택 시 폴더 경로 추가
                 print(f"\n> 명령어 경로 선택: \"{key}\"\n")
@@ -59,19 +64,23 @@ def execute_command(command):
                 print(f"다음 명령어를 선택해주세요:\n> 현재 경로: {"./module/script/"+"/".join(read_folder)}")
                 for idx, (key, value) in enumerate(scripts.items(), 1):
                     print(f"{idx}. {key.capitalize()}")
+                before_voice_text = ""
                 return True
             elif value == "Back":
                 if read_folder:
                     read_folder.pop()  # "뒤로가기" 선택 시 마지막 폴더를 제거
                 print(f"\n이전 경로로 돌아갑니다.\n> 현재 경로: {"./module/script/"+"/".join(read_folder)}")
+                before_voice_text = ""
                 return True
             elif ".py" in value:
                 # .py 일경우 실행
                 subprocess.run(["python", value], shell=True)
                 print(f"> \"{key}\" 을(를) 실행합니다.\n")
+                before_voice_text = ""
                 return True
             else :
                 print(f"{value} no unavailable file.")
+                before_voice_text = ""
                 return False
             
     # 파일 / 폴더 없을 경우
@@ -86,56 +95,15 @@ def execute_command(command):
             if pattern.match(key):
                 # 패턴 (대괄호) 파일이 존재할 경우 확장자에 맞춰서 실행하기.
                 if ".py" in value :
-                    subprocess.run(["python", value, command], shell=True)
+                    subprocess.run(["python", value, voice_text], shell=True)
                     print(f"> \"{key}\" 을(를) 실행합니다.\n")
                     read_folder = []
+                    before_voice_text = ""
                     return True
 
     # 종료만 따로 처리
-    if "종료" in command:
+    if "종료" in voice_text:
         sys.exit()
     
     # 명령어 없을때 처리
     return False
-
-# 네이버/유튜브로 나루토 검색
-# execute_command("구글")
-# execute_command("뒤로가기")
-# execute_command("네이버")
-# execute_command("검색")
-# execute_command("나루토")
-# execute_command("유튜브")
-# execute_command("검색")
-# execute_command("나루토")
-
-# 화면 밝기 제어
-# execute_command("화면밝기")
-# execute_command("20")
-# execute_command("화면밝기")
-# execute_command("50")
-# execute_command("화면밝기")
-# execute_command("100")
-# execute_command("화면밝기")
-# execute_command("80")
-# execute_command("화면밝기")
-# execute_command("50")
-# execute_command("화면밝기")
-# execute_command("30")
-# execute_command("화면밝기")
-# execute_command("0")
-# execute_command("화면밝기")
-# execute_command("20")
-
-# 음량 제어
-# execute_command("음량조절")
-# execute_command("0")
-
-
-# 프로그램 즉시실행
-# execute_command("응용프로그램")
-# execute_command("실행")
-# execute_command("GoClean")
-# execute_command("Slack")
-
-# 컴퓨터 절전
-# execute_command("컴퓨터 절전")
