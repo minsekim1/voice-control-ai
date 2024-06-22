@@ -33,7 +33,7 @@ def list_files_and_folders(read_folder):
     
     # 현재 위치가 폴더일 경우 "뒤로가기" 옵션을 추가할 조건 확인
     if len(read_folder) > 0:
-        items["뒤로가기"] = "Back"
+        items["뒤로 가기"] = "Back"
 
     return items
 
@@ -50,8 +50,8 @@ def execute_command(command):
     for key, value in scripts.items():
         if key in command.lower():
             if scripts[key] == "folder":
-                read_folder.append(command)  # 폴더 선택 시 폴더 경로 추가
-                print(f"\n> 명령어 경로 선택: \"{command}\"\n")
+                read_folder.append(key)  # 폴더 선택 시 폴더 경로 추가
+                print(f"\n> 명령어 경로 선택: \"{key}\"\n")
 
                 # 폴더 리스트를 사용하여 경로를 동적으로 구성
                 scripts = list_files_and_folders(read_folder)
@@ -90,8 +90,6 @@ def execute_command(command):
                     print(f"> \"{key}\" 을(를) 실행합니다.\n")
                     read_folder = []
                     return True
-        
-
 
     # 종료만 따로 처리
     if "종료" in command:
@@ -140,4 +138,4 @@ def execute_command(command):
 # execute_command("Slack")
 
 # 컴퓨터 절전
-execute_command("컴퓨터 절전")
+# execute_command("컴퓨터 절전")

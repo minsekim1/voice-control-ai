@@ -1,1 +1,1 @@
- print("BOT: 안녕?")
+print("BOT: 안녕?")

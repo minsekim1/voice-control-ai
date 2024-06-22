@@ -53,7 +53,8 @@ def stt_start():
 
     streaming_config = speech.StreamingRecognitionConfig(
         config=audio_config,
-        interim_results=True
+        interim_results=False
+        # interim_results=True
     )
 
     print("BOT: 말을 시작해주세요.")
