@@ -109,3 +109,5 @@ def execute_command(voice_text):
     
     # 명령어 없을때 처리
     return False
+
+
