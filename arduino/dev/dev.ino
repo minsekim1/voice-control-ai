@@ -7,6 +7,7 @@ void setup() {
     pinMode(ledPin, OUTPUT);
 }
 
+// "C:\Users\tkarn\AppData\Local\Arduino15\packages\esp32\hardware\esp32\3.0.2\cores\esp32\Arduino.h")C/C++
 void loop() {
     // 5 포인트 단위로 최소에서 최대로 페이드인
     for (int fadeValue = 0; fadeValue <= 255; fadeValue += 5) {
