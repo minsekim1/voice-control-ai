@@ -40,6 +40,6 @@ example) arduino-cli upload -p COM7 --fqbn esp32:esp32:esp32c3 arduino/complete_
 ```
 ./arduino/upload_sketch.sh <포트> path/to/your/sketch
 
-example) ./arduino/upload_sketch.sh COM7 arduino/complete_example/led_fade_in_out
+example) ./arduino/upload_sketch.sh COM7 arduino/complete_example/bluetooth_led_control
 
 ```
