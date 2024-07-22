@@ -1,66 +1,81 @@
-#include <WiFiManager.h>  // WiFiManager 라이브러리 포함
-
-// 웹 서버를 위한 라이브러리 포함
 #include <WebServer.h>
+#include <WiFi.h>
 
-const int ledPin = 8;  // LED 핀 번호
-WebServer server(80);  // 웹 서버 포트 설정
+// 핫스팟 설정
+const char* ap_ssid = "ESP32-AP";
+const char* ap_password = "12345678";
 
-void handleRoot() {
-  server.send(200, "text/html", "<h1>ESP32 LED Control</h1><button onclick=\"fetch('/ledon')\">LED ON</button><button onclick=\"fetch('/ledoff')\">LED OFF</button>");
+// 웹 서버 포트 설정
+WebServer server(80);
+
+// WiFi 설정 페이지 HTML
+const char* html = R"rawliteral(
+<!DOCTYPE HTML><html>
+<head>
+  <title>WiFi 설정</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+  <h1>WiFi 설정 페이지</h1>
+  <form action="/save">
+    SSID: <input type="text" name="ssid"><br>
+    비밀번호: <input type="password" name="password"><br>
+    <input type="submit" value="저장">
+  </form>
+</body>
+</html>
+)rawliteral";
+
+// WiFi 설정을 저장하고 연결하는 함수
+void handleSave() {
+    String ssid = server.arg("ssid");
+    String password = server.arg("password");
+
+    if (ssid.length() > 0 && password.length() > 0) {
+        server.send(200, "text/plain", "저장 완료! 장치를 재시작합니다...");
+
+        // WiFi 연결 시도
+        WiFi.mode(WIFI_STA);
+        WiFi.begin(ssid.c_str(), password.c_str());
+
+        // 연결 대기
+        while (WiFi.status() != WL_CONNECTED) {
+            delay(1000);
+            Serial.print(".");
+        }
+
+        Serial.println("");
+        Serial.println("WiFi 연결 완료!");
+        Serial.println("IP 주소: ");
+        Serial.println(WiFi.localIP());
+
+        // 웹 서버 중지
+        server.stop();
+    } else {
+        server.send(200, "text/plain", "SSID와 비밀번호를 입력해주세요.");
+    }
 }
 
-void handleLedOn() {
-  digitalWrite(ledPin, LOW);  // LED 켜기 (반대로 동작)
-  server.send(200, "text/html", "LED is ON");
-}
-
-void handleLedOff() {
-  digitalWrite(ledPin, HIGH);  // LED 끄기 (반대로 동작)
-  server.send(200, "text/html", "LED is OFF");
-}
-
-void handleNotFound() {
-  server.send(404, "text/plain", "Not found");
-}
-
+// 초기화 함수
 void setup() {
-  // 시리얼 포트 시작
-  Serial.begin(115200);
+    Serial.begin(115200);
 
-  // LED 핀 설정
-  pinMode(ledPin, OUTPUT);
-  digitalWrite(ledPin, HIGH);  // LED를 끈 상태로 초기화 (반대로 동작)
+    // 액세스 포인트 모드 설정
+    WiFi.softAP(ap_ssid, ap_password);
+    Serial.println("액세스 포인트 모드 설정 완료");
+    Serial.print("IP 주소: ");
+    Serial.println(WiFi.softAPIP());
 
-  // WiFiManager 초기화
-  WiFiManager wifiManager;
-
-  // 이전 설정을 재설정하려면 아래 줄의 주석을 해제합니다.
-  // wifiManager.resetSettings();
-
-  // Captive 포털 실행
-  if (!wifiManager.autoConnect("ESP32-AP")) {
-    Serial.println("Failed to connect and hit timeout");
-    // 재부팅
-    ESP.restart();
-  }
-
-  // Wi-Fi 연결 완료
-  Serial.println("Connected to Wi-Fi");
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
-
-  // 웹 서버 경로 설정
-  server.on("/", handleRoot);
-  server.on("/ledon", handleLedOn);
-  server.on("/ledoff", handleLedOff);
-  server.onNotFound(handleNotFound);
-
-  // 웹 서버 시작
-  server.begin();
+    // 웹 서버 라우팅 설정
+    server.on("/", HTTP_GET, []() {
+        server.send(200, "text/html", html);
+    });
+    server.on("/save", HTTP_GET, handleSave);
+    server.begin();
+    Serial.println("웹 서버 시작");
 }
 
+// 메인 루프
 void loop() {
-  // 웹 서버 클라이언트 처리
-  server.handleClient();
+    server.handleClient();
 }
