@@ -24,6 +24,7 @@ class MyCallbacks : public BLECharacteristicCallbacks {
 };
 
 void setup() {
+    Serial.println("setup: bluetooth_led_control");
     Serial.begin(115200);
     pinMode(LED_PIN, OUTPUT);     // LED_PIN을 출력으로 설정합니다.
     digitalWrite(LED_PIN, HIGH);  // 초기 상태를 꺼짐으로 설정합니다.

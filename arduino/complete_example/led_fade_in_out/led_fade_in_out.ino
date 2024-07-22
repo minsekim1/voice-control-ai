@@ -3,6 +3,8 @@
 int ledPin = 8;
 
 void setup() {
+    Serial.println("setup: led_fade_in_out");
+
     // put your setup code here, to run once:
     pinMode(ledPin, OUTPUT);
 }

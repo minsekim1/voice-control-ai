@@ -3,7 +3,7 @@
 # 스크립트 사용 방법 출력
 usage() {
   echo "Usage: $0 <port> <sketch_path>"
-  echo "Example: $0 COM7 /path/to/your/sketch"
+  echo "Example: $0 COM7 ./arduino/complete_example/wifi_connect"
   exit 1
 }
 
