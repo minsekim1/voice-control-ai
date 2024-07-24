@@ -43,3 +43,13 @@ example) arduino-cli upload -p COM7 --fqbn esp32:esp32:esp32c3 arduino/complete_
 example) ./arduino/upload_sketch.sh COM7 arduino/complete_example/bluetooth_led_control
 
 ```
+
+## 아두이노 관련 Q&A
+
+### Seiral.print가 안 먹음
+
+- 시리얼 출력을 하려면 보드 옵션에서 USB CDC On Boot 를 Enable 해야 합니다.
+
+### 갑자기 Arduino IDE에서 실행이 안됨
+
+- 보드 체크 (도구 -> 보드 -> esp32 -> ESP32C3 Dev Module)

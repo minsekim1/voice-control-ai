@@ -14,6 +14,7 @@ const char* html = R"rawliteral(
 <head>
   <title>WiFi 설정</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8">
 </head>
 <body>
   <h1>WiFi 설정 페이지</h1>
@@ -32,27 +33,34 @@ void handleSave() {
     String password = server.arg("password");
 
     if (ssid.length() > 0 && password.length() > 0) {
-        server.send(200, "text/plain", "저장 완료! 장치를 재시작합니다...");
+        server.send(200, "text/plain", "save completed! restart device...");
 
         // WiFi 연결 시도
         WiFi.mode(WIFI_STA);
         WiFi.begin(ssid.c_str(), password.c_str());
 
         // 연결 대기
-        while (WiFi.status() != WL_CONNECTED) {
+        int attempt = 0;
+        while (WiFi.status() != WL_CONNECTED && attempt < 30) { // 최대 30초 대기
             delay(1000);
             Serial.print(".");
+            attempt++;
         }
 
-        Serial.println("");
-        Serial.println("WiFi 연결 완료!");
-        Serial.println("IP 주소: ");
-        Serial.println(WiFi.localIP());
+        if (WiFi.status() == WL_CONNECTED) {
+            Serial.println("");
+            Serial.println("WiFi 연결 완료!");
+            Serial.println("IP 주소: ");
+            Serial.println(WiFi.localIP());
 
-        // 웹 서버 중지
-        server.stop();
+            // 웹 서버 중지
+            server.stop();
+        } else {
+            Serial.println("WiFi 연결 실패");
+            server.send(200, "text/plain", "WiFi 연결 실패. SSID와 비밀번호를 확인하세요.");
+        }
     } else {
-        server.send(200, "text/plain", "SSID와 비밀번호를 입력해주세요.");
+        server.send(200, "text/plain", "please, enter SSID and wifi password.");
     }
 }
 
