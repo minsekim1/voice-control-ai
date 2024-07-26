@@ -53,3 +53,7 @@ example) ./arduino/upload_sketch.sh COM7 arduino/complete_example/bluetooth_led_
 ### 갑자기 Arduino IDE에서 실행이 안됨
 
 - 보드 체크 (도구 -> 보드 -> esp32 -> ESP32C3 Dev Module)
+
+### 와이파이 연결안됨
+
+- 5G말고 2.4G로 연결해야됨

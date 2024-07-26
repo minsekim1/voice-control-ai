@@ -37,19 +37,25 @@ void handleSave() {
 
         // WiFi 연결 시도
         WiFi.mode(WIFI_STA);
-        WiFi.begin(ssid.c_str(), password.c_str());
+        WiFi.begin(ssid, password);
 
         // 연결 대기
         int attempt = 0;
-        while (WiFi.status() != WL_CONNECTED && attempt < 30) { // 최대 30초 대기
+        while (WiFi.status() != WL_CONNECTED && attempt < 5) { // 최대 5초 대기
             delay(1000);
             Serial.print(".");
             attempt++;
         }
 
+        Serial.print("저장된 SSID: ");
+        Serial.println(ssid);
+        Serial.print("저장된 비밀번호: ");
+        Serial.println(password);
+
         if (WiFi.status() == WL_CONNECTED) {
             Serial.println("");
             Serial.println("WiFi 연결 완료!");
+            
             Serial.println("IP 주소: ");
             Serial.println(WiFi.localIP());
 
