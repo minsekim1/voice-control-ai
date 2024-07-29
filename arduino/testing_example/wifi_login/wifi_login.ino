@@ -8,6 +8,10 @@ const char* ap_password = "12345678";
 // 웹 서버 포트 설정
 WebServer server(80);
 
+// LED 핀 설정
+const int AlertLedPin = 8;
+int isConnected = false;
+
 // WiFi 설정 페이지 HTML
 const char* html = R"rawliteral(
 <!DOCTYPE HTML><html>
@@ -23,56 +27,94 @@ const char* html = R"rawliteral(
     비밀번호: <input type="password" name="password"><br>
     <input type="submit" value="저장">
   </form>
+  <br>
+  <h1>LED 제어</h1>
+  <form action="/led_on">
+    <input type="submit" value="LED ON">
+  </form>
+  <form action="/led_off">
+    <input type="submit" value="LED OFF">
+  </form>
 </body>
 </html>
 )rawliteral";
+
+// 핀 제어 함수
+void handlePinControl() {
+    if (isConnected == false){
+        server.send(200, "text/plain", "please, connect to wifi.");
+        return;
+    }
+    
+    String pinNumber = server.arg("pin");
+    String value = server.arg("value");
+    
+    if (pinNumber.length() == 0 || value.length() == 0) {
+        server.send(200, "text/plain", "please, enter pin and value.");
+        return;
+    }
+
+    int pin = pinNumber.toInt();
+    int val = value.toInt();
+
+    pinMode(pin, OUTPUT); // 핀을 출력 모드로 설정
+    digitalWrite(pin, val);
+
+    String response = "Pin " + pinNumber + " set to " + value;
+    server.send(200, "text/plain", response);
+}
 
 // WiFi 설정을 저장하고 연결하는 함수
 void handleSave() {
     String ssid = server.arg("ssid");
     String password = server.arg("password");
 
-    if (ssid.length() > 0 && password.length() > 0) {
-        server.send(200, "text/plain", "save completed! restart device...");
-
-        // WiFi 연결 시도
-        WiFi.mode(WIFI_STA);
-        WiFi.begin(ssid, password);
-
-        // 연결 대기
-        int attempt = 0;
-        while (WiFi.status() != WL_CONNECTED && attempt < 5) { // 최대 5초 대기
-            delay(1000);
-            Serial.print(".");
-            attempt++;
-        }
-
-        Serial.print("저장된 SSID: ");
-        Serial.println(ssid);
-        Serial.print("저장된 비밀번호: ");
-        Serial.println(password);
-
-        if (WiFi.status() == WL_CONNECTED) {
-            Serial.println("");
-            Serial.println("WiFi 연결 완료!");
-            
-            Serial.println("IP 주소: ");
-            Serial.println(WiFi.localIP());
-
-            // 웹 서버 중지
-            server.stop();
-        } else {
-            Serial.println("WiFi 연결 실패");
-            server.send(200, "text/plain", "WiFi 연결 실패. SSID와 비밀번호를 확인하세요.");
-        }
-    } else {
+    if (ssid.length() == 0 || password.length() == 0) {
         server.send(200, "text/plain", "please, enter SSID and wifi password.");
+        return;
+    }
+
+    server.send(200, "text/plain", "save completed! restart device...");
+
+    // WiFi 연결 시도
+    WiFi.mode(WIFI_STA);
+    WiFi.begin(ssid, password);
+
+    // 연결 대기
+    int attempt = 0;
+    while (WiFi.status() != WL_CONNECTED && attempt < 5) {  // 최대 5초 대기
+        delay(1000);
+        Serial.print(".");
+        attempt++;
+    }
+
+    Serial.print("저장된 SSID: ");
+    Serial.println(ssid);
+    Serial.print("저장된 비밀번호: ");
+    Serial.println(password);
+
+    if (WiFi.status() == WL_CONNECTED) {
+        isConnected = true;
+        
+        Serial.println("");
+        Serial.println("WiFi 연결 완료!");
+
+        Serial.println("IP 주소: ");
+        Serial.println(WiFi.localIP());
+        
+    } else {
+        Serial.println("WiFi 연결 실패");
+        server.send(200, "text/plain", "WiFi 연결 실패. SSID와 비밀번호를 확인하세요.");
     }
 }
 
 // 초기화 함수
 void setup() {
     Serial.begin(115200);
+
+    // LED 핀 설정
+    pinMode(AlertLedPin, OUTPUT);
+    digitalWrite(AlertLedPin, LOW);  // LED 초기 상태를 OFF로 설정
 
     // 액세스 포인트 모드 설정
     WiFi.softAP(ap_ssid, ap_password);
@@ -85,6 +127,7 @@ void setup() {
         server.send(200, "text/html", html);
     });
     server.on("/save", HTTP_GET, handleSave);
+    server.on("/pin/control", HTTP_GET, handlePinControl);
     server.begin();
     Serial.println("웹 서버 시작");
 }
