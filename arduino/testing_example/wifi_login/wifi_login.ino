@@ -1,5 +1,6 @@
 #include <WebServer.h>
 #include <WiFi.h>
+#include <Preferences.h> // Preferences 라이브러리 포함
 
 // 핫스팟 설정
 const char* ap_ssid = "ESP32-AP";
@@ -10,7 +11,9 @@ WebServer server(80);
 
 // LED 핀 설정
 const int AlertLedPin = 8;
-int isConnected = false;
+bool isConnected = false;
+
+Preferences preferences; // Preferences 객체 생성
 
 // WiFi 설정 페이지 HTML
 const char* html = R"rawliteral(
@@ -27,21 +30,13 @@ const char* html = R"rawliteral(
     비밀번호: <input type="password" name="password"><br>
     <input type="submit" value="저장">
   </form>
-  <br>
-  <h1>LED 제어</h1>
-  <form action="/led_on">
-    <input type="submit" value="LED ON">
-  </form>
-  <form action="/led_off">
-    <input type="submit" value="LED OFF">
-  </form>
 </body>
 </html>
 )rawliteral";
 
 // 핀 제어 함수
 void handlePinControl() {
-    if (isConnected == false){
+    if (!isConnected) {
         server.send(200, "text/plain", "please, connect to wifi.");
         return;
     }
@@ -74,11 +69,17 @@ void handleSave() {
         return;
     }
 
+    // SSID와 비밀번호를 Preferences에 저장
+    preferences.begin("wifi", false);
+    preferences.putString("ssid", ssid);
+    preferences.putString("password", password);
+    preferences.end();
+
     server.send(200, "text/plain", "save completed! restart device...");
 
     // WiFi 연결 시도
     WiFi.mode(WIFI_STA);
-    WiFi.begin(ssid, password);
+    WiFi.begin(ssid.c_str(), password.c_str());
 
     // 연결 대기
     int attempt = 0;
@@ -122,9 +123,42 @@ void setup() {
     Serial.print("IP 주소: ");
     Serial.println(WiFi.softAPIP());
 
+    // 저장된 SSID와 비밀번호 불러오기
+    preferences.begin("wifi", true);
+    String saved_ssid = preferences.getString("ssid", "");
+    String saved_password = preferences.getString("password", "");
+    preferences.end();
+
+    if (saved_ssid.length() > 0 && saved_password.length() > 0) {
+        WiFi.mode(WIFI_STA);
+        WiFi.begin(saved_ssid.c_str(), saved_password.c_str());
+
+        int attempt = 0;
+        while (WiFi.status() != WL_CONNECTED && attempt < 5) {
+            delay(1000);
+            Serial.print(".");
+            attempt++;
+        }
+
+        if (WiFi.status() == WL_CONNECTED) {
+            isConnected = true;
+            Serial.println("");
+            Serial.println("저장된 정보로 WiFi 연결 완료!");
+            Serial.println("IP 주소: ");
+            Serial.println(WiFi.localIP());
+        } else {
+            Serial.println("저장된 정보로 WiFi 연결 실패");
+        }
+    }
+
     // 웹 서버 라우팅 설정
     server.on("/", HTTP_GET, []() {
-        server.send(200, "text/html", html);
+        if (WiFi.status() == WL_CONNECTED) {
+            String response = "already wifi connected to '" + WiFi.SSID() + "'";
+            server.send(200, "text/plain", response);
+        } else {
+            server.send(200, "text/html", html);
+        }
     });
     server.on("/save", HTTP_GET, handleSave);
     server.on("/pin/control", HTTP_GET, handlePinControl);
