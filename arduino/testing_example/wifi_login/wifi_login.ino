@@ -109,6 +109,15 @@ void handleSave() {
     }
 }
 
+// WiFi 연결 상태를 반환하는 함수
+void handleNetworkStatus() {
+    if (WiFi.status() == WL_CONNECTED) {
+        server.send(200, "text/plain", "true");
+    } else {
+        server.send(200, "text/plain", "false");
+    }
+}
+
 // 초기화 함수
 void setup() {
     Serial.begin(115200);
@@ -161,7 +170,7 @@ void setup() {
         String currentSSID = WiFi.SSID();
         String pageContent = String(html);
         // WiFi가 이미 연결되어 있는 경우, 현재 연결된 WiFi 정보를 페이지의 맨 위에 표시
-        if (WiFi.status() == WL_CONNECTED) {
+        if (WiFi.status() == WL_CONNECTED) {4
             pageContent = "<p>Already connected to '" + currentSSID + "'</p>" + pageContent;
         }
         server.send(200, "text/html", pageContent);
@@ -169,6 +178,7 @@ void setup() {
     
     server.on("/save", HTTP_GET, handleSave);
     server.on("/pin/control", HTTP_GET, handlePinControl);
+    server.on("/network/status", HTTP_GET, handleNetworkStatus); // /network/status 경로 추가
     server.begin();
     Serial.println("웹 서버 시작");
 }
