@@ -170,7 +170,7 @@ void setup() {
         String currentSSID = WiFi.SSID();
         String pageContent = String(html);
         // WiFi가 이미 연결되어 있는 경우, 현재 연결된 WiFi 정보를 페이지의 맨 위에 표시
-        if (WiFi.status() == WL_CONNECTED) {4
+        if (WiFi.status() == WL_CONNECTED) {
             pageContent = "<p>Already connected to '" + currentSSID + "'</p>" + pageContent;
         }
         server.send(200, "text/html", pageContent);
