@@ -148,6 +148,11 @@ void setup() {
             Serial.println(WiFi.localIP());
         } else {
             Serial.println("저장된 정보로 WiFi 연결 실패");
+            Serial.println("saved Wifi ssid:");
+            Serial.println(saved_ssid);
+            Serial.println("saved passowrd:");
+            Serial.println(saved_password);
+            
         }
     }
 
