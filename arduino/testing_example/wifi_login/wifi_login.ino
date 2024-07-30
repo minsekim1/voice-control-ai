@@ -158,13 +158,15 @@ void setup() {
 
     // 웹 서버 라우팅 설정
     server.on("/", HTTP_GET, []() {
+        String currentSSID = WiFi.SSID();
+        String pageContent = String(html);
+        // WiFi가 이미 연결되어 있는 경우, 현재 연결된 WiFi 정보를 페이지의 맨 위에 표시
         if (WiFi.status() == WL_CONNECTED) {
-            String response = "already wifi connected to '" + WiFi.SSID() + "'";
-            server.send(200, "text/plain", response);
-        } else {
-            server.send(200, "text/html", html);
+            pageContent = "<p>Already connected to '" + currentSSID + "'</p>" + pageContent;
         }
+        server.send(200, "text/html", pageContent);
     });
+    
     server.on("/save", HTTP_GET, handleSave);
     server.on("/pin/control", HTTP_GET, handlePinControl);
     server.begin();
