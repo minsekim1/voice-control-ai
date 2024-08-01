@@ -86,13 +86,19 @@ public class MainActivity extends AppCompatActivity {
         }
     }
     private Boolean found;
+    private String subnet = null;
     private int failedCount = 0;
+    private Toast currentToast = null; // 현재 표시되고 있는 Toast를 저장할 변수
 
     private void findESP32() {
         new Thread(() -> {
             found = false;
-            String localIp = getLocalIpAddress();
-            String subnet = localIp != null ? localIp.substring(0, localIp.lastIndexOf('.') + 1) : null;
+
+            if(subnet == null){
+                String localIp = getLocalIpAddress();
+                subnet = localIp != null ? localIp.substring(0, localIp.lastIndexOf('.') + 1) : null;
+            }
+
 
             if (subnet != null) {
                 // OkHttpClient에 타임아웃 설정 추가
@@ -102,7 +108,7 @@ public class MainActivity extends AppCompatActivity {
                         .writeTimeout(1, java.util.concurrent.TimeUnit.SECONDS)
                         .build();
 
-                for (int i = 1; i <= 255; i++) {
+                for (int i = 1; i <= 253; i++) {
                     String ip = subnet + i;
                     Request request = new Request.Builder()
                             .url("http://" + ip + "/network/status")
@@ -112,7 +118,7 @@ public class MainActivity extends AppCompatActivity {
                         @Override
                         public void onFailure(okhttp3.Call call, IOException e) {
                             // 요청 실패 시 호출
-                            Log.e(TAG, "Failed to connect to " + ip, e);
+                            Log.e(TAG, "Failed to connect to " + ip);
                             incrementFailedCount();
                         }
 
@@ -126,7 +132,7 @@ public class MainActivity extends AppCompatActivity {
                                         runOnUiThread(() -> {
                                             connectionStatus.setText("ESP32 Status: Connected (" + esp32Ip + ")");
                                             connectionStatus.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
-                                            Toast.makeText(MainActivity.this, "ESP32 found at: " + esp32Ip, Toast.LENGTH_LONG).show();
+                                            showToast("ESP32 found at: " + esp32Ip);
                                         });
                                     }
                                 }
@@ -140,15 +146,24 @@ public class MainActivity extends AppCompatActivity {
                 runOnUiThread(() -> {
                     connectionStatus.setText("ESP32 Status: Not connected");
                     connectionStatus.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
-                    Toast.makeText(MainActivity.this, "Failed to find IoT Device in the network", Toast.LENGTH_LONG).show();
+                    showToast( "Failed to find IoT Device in the network");
                 });
             }
         }).start();
     }
 
+    private void showToast(String message) {
+        if (currentToast != null) {
+            currentToast.cancel(); // 기존 Toast 취소
+        }
+        currentToast = Toast.makeText(MainActivity.this, message, Toast.LENGTH_SHORT);
+        currentToast.show(); // 새로운 Toast 표시
+    }
+
     private synchronized void incrementFailedCount() {
         failedCount++;
-        if (failedCount >= 255 && !found) {
+        if (failedCount >= 253 && !found) {
+            failedCount = 0;
             runOnUiThread(() -> {
                 connectionStatus.setText("ESP32 Status: Not connected");
                 connectionStatus.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
@@ -170,14 +185,14 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        int brightness = Integer.parseInt(value);
-        if (brightness < 0 || brightness > 255) {
+        int pinValue = Integer.parseInt(value);
+        if (pinValue < 0 || pinValue > 255) {
             Toast.makeText(this, "Brightness value must be between 0 and 255", Toast.LENGTH_SHORT).show();
             return;
         }
 
         OkHttpClient client = new OkHttpClient();
-        String url = "http://" + esp32Ip + "/led?pin=" + pin + "&brightness=" + brightness;
+        String url = "http://" + esp32Ip + "/pin/control?pin=" + pin + "&value=" + pinValue;
 
         Request request = new Request.Builder()
                 .url(url)
