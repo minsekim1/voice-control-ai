@@ -1,0 +1,27 @@
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <EditText
+        android:id="@+id/input_pin"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Enter pin number"
+        android:inputType="number" />
+
+    <EditText
+        android:id="@+id/input_value"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Enter LED brightness (0-255)"
+        android:inputType="number" />
+
+    <Button
+        android:id="@+id/button_led_control"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Control LED" />
+</LinearLayout>
