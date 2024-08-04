@@ -3,6 +3,8 @@ package com.campustech.iot;
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -21,6 +23,7 @@ import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -37,6 +40,14 @@ public class MainActivity extends AppCompatActivity {
     private EditText inputValue;
 
     private String esp32Ip;
+
+    private Boolean found;
+    private String subnet = null;
+    private int failedCount = 0;
+    private Toast currentToast = null;
+
+    private Handler handler = new Handler(Looper.getMainLooper());
+    private Runnable pingRunnable;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,27 +96,20 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
-    private Boolean found;
-    private String subnet = null;
-    private int failedCount = 0;
-    private Toast currentToast = null; // 현재 표시되고 있는 Toast를 저장할 변수
 
     private void findESP32() {
         new Thread(() -> {
             found = false;
+            failedCount = 0;
 
-            if(subnet == null){
-                String localIp = getLocalIpAddress();
-                subnet = localIp != null ? localIp.substring(0, localIp.lastIndexOf('.') + 1) : null;
-            }
-
+            String localIp = getLocalIpAddress();
+            subnet = localIp != null ? localIp.substring(0, localIp.lastIndexOf('.') + 1) : null;
 
             if (subnet != null) {
-                // OkHttpClient에 타임아웃 설정 추가
                 OkHttpClient client = new OkHttpClient.Builder()
-                        .connectTimeout(1, java.util.concurrent.TimeUnit.SECONDS)
-                        .readTimeout(1, java.util.concurrent.TimeUnit.SECONDS)
-                        .writeTimeout(1, java.util.concurrent.TimeUnit.SECONDS)
+                        .connectTimeout(1, TimeUnit.SECONDS)
+                        .readTimeout(1, TimeUnit.SECONDS)
+                        .writeTimeout(1, TimeUnit.SECONDS)
                         .build();
 
                 for (int i = 1; i <= 253; i++) {
@@ -117,15 +121,13 @@ public class MainActivity extends AppCompatActivity {
                     client.newCall(request).enqueue(new okhttp3.Callback() {
                         @Override
                         public void onFailure(okhttp3.Call call, IOException e) {
-                            // 요청 실패 시 호출
-                            Log.e(TAG, "Failed to connect to " + ip);
                             incrementFailedCount();
                         }
 
                         @Override
                         public void onResponse(okhttp3.Call call, Response response) throws IOException {
                             if (response.isSuccessful()) {
-                                synchronized (this) {
+                                synchronized (found) {
                                     if (!found) {
                                         found = true;
                                         esp32Ip = ip;
@@ -133,6 +135,7 @@ public class MainActivity extends AppCompatActivity {
                                             connectionStatus.setText("ESP32 Status: Connected (" + esp32Ip + ")");
                                             connectionStatus.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
                                             showToast("ESP32 found at: " + esp32Ip);
+                                            startPingTask();
                                         });
                                     }
                                 }
@@ -146,7 +149,7 @@ public class MainActivity extends AppCompatActivity {
                 runOnUiThread(() -> {
                     connectionStatus.setText("ESP32 Status: Not connected");
                     connectionStatus.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
-                    showToast( "Failed to find IoT Device in the network");
+                    showToast("Failed to find IoT Device in the network");
                 });
             }
         }).start();
@@ -154,10 +157,10 @@ public class MainActivity extends AppCompatActivity {
 
     private void showToast(String message) {
         if (currentToast != null) {
-            currentToast.cancel(); // 기존 Toast 취소
+            currentToast.cancel();
         }
         currentToast = Toast.makeText(MainActivity.this, message, Toast.LENGTH_SHORT);
-        currentToast.show(); // 새로운 Toast 표시
+        currentToast.show();
     }
 
     private synchronized void incrementFailedCount() {
@@ -167,10 +170,11 @@ public class MainActivity extends AppCompatActivity {
             runOnUiThread(() -> {
                 connectionStatus.setText("ESP32 Status: Not connected");
                 connectionStatus.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
-                Toast.makeText(MainActivity.this, "Failed to find IoT Device in the network", Toast.LENGTH_LONG).show();
+                showToast("Failed to find IoT Device in the network");
             });
         }
     }
+
     private void controlLED() {
         if (esp32Ip == null || esp32Ip.isEmpty()) {
             Toast.makeText(this, "ESP32 not connected. Please find ESP32 first.", Toast.LENGTH_SHORT).show();
@@ -217,7 +221,6 @@ public class MainActivity extends AppCompatActivity {
             for (NetworkInterface intf : interfaces) {
                 List<InetAddress> addrs = Collections.list(intf.getInetAddresses());
                 for (InetAddress addr : addrs) {
-                    // 이 조건문을 사용하여 Wi-Fi 네트워크에 연결된 IP 주소를 가져옵니다.
                     if (!addr.isLoopbackAddress() && addr.isSiteLocalAddress() && addr instanceof java.net.Inet4Address) {
                         return addr.getHostAddress();
                     }
@@ -227,5 +230,59 @@ public class MainActivity extends AppCompatActivity {
             Log.e(TAG, ex.toString());
         }
         return null;
+    }
+
+    private void startPingTask() {
+        if (pingRunnable != null) {
+            handler.removeCallbacks(pingRunnable);
+        }
+
+        pingRunnable = new Runnable() {
+            @Override
+            public void run() {
+                pingESP32();
+                handler.postDelayed(this, 1000); // 1초마다 실행
+            }
+        };
+
+        handler.post(pingRunnable);
+    }
+
+    private void pingESP32() {
+        if (esp32Ip == null || esp32Ip.isEmpty()) {
+            return;
+        }
+
+        OkHttpClient client = new OkHttpClient.Builder()
+                .connectTimeout(1, TimeUnit.SECONDS)
+                .readTimeout(1, TimeUnit.SECONDS)
+                .writeTimeout(1, TimeUnit.SECONDS)
+                .build();
+
+        Request request = new Request.Builder()
+                .url("http://" + esp32Ip + "/network/status")
+                .build();
+
+        new Thread(() -> {
+            try {
+                Response response = client.newCall(request).execute();
+                if (response.isSuccessful()) {
+                    runOnUiThread(() -> {
+                        connectionStatus.setText("ESP32 Status: Connected (" + esp32Ip + ")");
+                        connectionStatus.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
+                    });
+                } else {
+                    runOnUiThread(() -> {
+                        connectionStatus.setText("ESP32 Status: Disconnected");
+                        connectionStatus.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
+                    });
+                }
+            } catch (IOException e) {
+                runOnUiThread(() -> {
+                    connectionStatus.setText("ESP32 Status: Disconnected");
+                    connectionStatus.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
+                });
+            }
+        }).start();
     }
 }

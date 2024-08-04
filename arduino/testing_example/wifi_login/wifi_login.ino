@@ -1,3 +1,5 @@
+#include <dummy.h>
+
 #include <WebServer.h>
 #include <WiFi.h>
 #include <Preferences.h> // Preferences 라이브러리 포함
@@ -112,8 +114,10 @@ void handleSave() {
 // WiFi 연결 상태를 반환하는 함수
 void handleNetworkStatus() {
     if (WiFi.status() == WL_CONNECTED) {
+        Serial.println("WiFi 연결 성공 반환");
         server.send(200, "text/plain", "true");
     } else {
+        Serial.println("WiFi 연결 실패 반환");
         server.send(200, "text/plain", "false");
     }
 }
