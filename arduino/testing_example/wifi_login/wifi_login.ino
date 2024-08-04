@@ -4,6 +4,30 @@
 #include <WiFi.h>
 #include <Preferences.h> // Preferences 라이브러리 포함
 
+// Pin List
+
+// 좌측
+// 5V -> 5V 전원을 공급합니다.
+// GND -> 접지 핀입니다.
+// 3V -> 3.3V 전원을 공급합니다.
+// GPIO4 - SCK-A4 -> SPI 클럭 핀(SCK)으로도 사용할 수 있습니다.
+// GPIO3 - SCK-A3 -> SPI 클럭 핀(SCK)으로도 사용할 수 있습니다.
+// GPIO2 - SCK-A2 -> SPI 클럭 핀(SCK)으로도 사용할 수 있습니다.
+// GPIO1 - SCK-A1 -> SPI 클럭 핀(SCK)으로도 사용할 수 있습니다.
+// GPIO0 - SCK-A0 -> SPI 클럭 핀(SCK)으로도 사용할 수 있습니다.
+
+
+// 우측
+// GPIO5 A5-MISO -> SPI의 MISO (Master In Slave Out) 핀으로도 사용할 수 있습니다.
+// GPIO6 MOSI -> SPI의 MOSI (Master Out Slave In) 핀으로도 사용할 수 있습니다.
+// GPIO7 - SS -> SPI의 SS (Slave Select) 핀으로도 사용할 수 있습니다.
+// GPIO8 - SDA -> I2C의 SDA (Data) 핀으로도 사용할 수 있습니다. 
+// GPIO9 - SCL -> I2C의 SCL (Clock) 핀으로도 사용할 수 있습니다.
+// GPIO10
+// GPIO20 - RX -> UART의 RX (Receive) 핀으로 사용될 수 있습니다.
+// GPIO21 - TX -> UART의 TX (Transmit) 핀으로 사용될 수 있습니다.
+
+
 // 핫스팟 설정
 const char* ap_ssid = "ESP32-AP";
 const char* ap_password = "12345678";
@@ -45,19 +69,22 @@ void handlePinControl() {
     
     String pinNumber = server.arg("pin");
     String value = server.arg("value");
-    
+    String response = "Pin " + pinNumber + " set to " + value;
+    Serial.println(response);
+
     if (pinNumber.length() == 0 || value.length() == 0) {
         server.send(200, "text/plain", "please, enter pin and value.");
+        Serial.println("handlePinControl failed.");
         return;
     }
+    Serial.println("handlePinControl success.");
 
     int pin = pinNumber.toInt();
     int val = value.toInt();
 
     pinMode(pin, OUTPUT); // 핀을 출력 모드로 설정
     digitalWrite(pin, val);
-
-    String response = "Pin " + pinNumber + " set to " + value;
+    
     server.send(200, "text/plain", response);
 }
 
@@ -114,7 +141,6 @@ void handleSave() {
 // WiFi 연결 상태를 반환하는 함수
 void handleNetworkStatus() {
     if (WiFi.status() == WL_CONNECTED) {
-        Serial.println("WiFi 연결 성공 반환");
         server.send(200, "text/plain", "true");
     } else {
         Serial.println("WiFi 연결 실패 반환");

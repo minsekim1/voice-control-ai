@@ -57,3 +57,11 @@ example) ./arduino/upload_sketch.sh COM7 arduino/complete_example/bluetooth_led_
 ### 와이파이 연결안됨
 
 - 5G말고 2.4G로 연결해야됨
+
+### 링크
+
+맥 -> Adafruit QT PyESP32-C3
+타오바오 ESP 칩 구매처 -> https://item.taobao.com/item.htm?spm=a1z10.3-c-s.w4002-24438210134.9.27bc6ea3Er0bkc&id=707413078834
+ESP32 튜토리얼 -> https://www.nologo.tech/product/esp32/esp32c3SuperMini/esp32C3SuperMini.html#q2-%E4%B8%8A%E4%BC%A0%E4%B9%8B%E5%90%8E%E7%A8%8B%E5%BA%8F%E6%97%A0%E6%B3%95%E8%BF%90%E8%A1%8C
+튜토리얼2 -> https://docs.geeksman.com/esp32/#%E7%9B%AE%E5%BD%95-arduino
+타오바오 추가 배터리 판매처 -> https://item.taobao.com/item.htm?spm=a1z10.3-c.w4002-24438210134.20.5e806ea3sbuxO1&id=756027058909
