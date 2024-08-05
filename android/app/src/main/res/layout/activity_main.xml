@@ -11,13 +11,15 @@
         android:layout_height="wrap_content"
         android:text="ESP32 Status: Not connected"
         android:textSize="18sp"
-        android:textColor="@android:color/holo_red_dark" />
+        android:textColor="@color/red_700" />
 
     <Button
         android:id="@+id/button_find_esp32"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Find ESP32" />
+        android:text="Find ESP32"
+        android:textAllCaps="false"
+        android:backgroundTint="@color/green_500"/>
 
     <EditText
         android:id="@+id/input_pin"
@@ -37,5 +39,12 @@
         android:id="@+id/button_led_control"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Control LED" />
+        android:text="Control LED"
+        android:textAllCaps="false"
+        android:backgroundTint="@color/gray_700"/>
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="250dp"
+        android:src="@drawable/esp32" />
 </LinearLayout>
