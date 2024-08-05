@@ -79,8 +79,10 @@ public class MainActivity extends AppCompatActivity {
             return false;
         }
         // 재연결시도
+
         if(esp32Ip == null){
             String ip = loadEsp32Ip();
+            Log.i(TAG, "try to reconnect saved esp32Ip:"+ip);
             if(ip != null) checkIp(ip);
         }
         return true;
@@ -120,12 +122,12 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
 
-            for (int i = 20; i <= 253; i++) {
+            for (int i = 1; i <= 253; i++) {
                 Log.i(TAG, esp32Ip + " i:"+ i);
                 if (esp32Ip != null) break;
                 checkIp(subnet + i);
                 try {
-                    Thread.sleep(30); // 50ms 대기
+                    Thread.sleep(1); // 50ms 대기
                 } catch (InterruptedException e) {
                     runOnUiThread(() -> {
                         connectionStatus.setText("ESP32 Status: Failed to wait timer");
@@ -158,14 +160,15 @@ public class MainActivity extends AppCompatActivity {
             buttonFindEsp32.setText("Find ESP32");
             buttonFindEsp32.setBackgroundTintList(ContextCompat.getColorStateList(getApplicationContext(), R.color.green_500));
             showToast("disconnect ESP32");
+            saveEsp32Ip(null);
         });
 
     }
     private void checkIp(String ip) {
         OkHttpClient client = new OkHttpClient.Builder()
-                .connectTimeout(500, TimeUnit.MILLISECONDS)
-                .readTimeout(500, TimeUnit.MILLISECONDS)
-                .writeTimeout(500, TimeUnit.MILLISECONDS)
+                .connectTimeout(1000, TimeUnit.MILLISECONDS)
+                .readTimeout(1000, TimeUnit.MILLISECONDS)
+                .writeTimeout(1000, TimeUnit.MILLISECONDS)
                 .build();
 
         Request request = new Request.Builder()
