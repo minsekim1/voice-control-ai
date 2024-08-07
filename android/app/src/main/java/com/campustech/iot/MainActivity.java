@@ -8,8 +8,12 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Spinner;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -39,9 +43,11 @@ public class MainActivity extends AppCompatActivity {
     private Button buttonLedControl;
     private EditText inputPin;
     private EditText inputValue;
+    private Switch inputToggle;
     private String esp32Ip = null;
     private String subnet = null;
     private Toast currentToast = null;
+    private String inputType = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,9 +56,10 @@ public class MainActivity extends AppCompatActivity {
 
         connectionStatus = findViewById(R.id.connection_status);
         buttonFindEsp32 = findViewById(R.id.button_find_esp32);
-        buttonLedControl = findViewById(R.id.button_led_control);
         inputPin = findViewById(R.id.input_pin);
         inputValue = findViewById(R.id.input_value);
+        inputToggle = findViewById(R.id.input_toggle);
+        buttonLedControl = findViewById(R.id.button_led_control);
 
         buttonFindEsp32.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -69,6 +76,56 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        // input_type 선택창
+        Spinner spinner = findViewById(R.id.input_type);
+        // 어댑터 생성
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
+                R.array.options_array, android.R.layout.simple_spinner_item);
+        // 드롭다운 레이아웃 스타일 지정
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        // 스피너에 어댑터 설정
+        spinner.setAdapter(adapter);
+        // 스피너 아이템 선택 리스너 설정
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                // 선택된 아이템을 처리
+                String newInputType = parent.getItemAtPosition(position).toString();
+                inputType = newInputType;
+                switch (inputType) {
+                    case "All LED":
+                        inputPin.setVisibility(View.GONE);
+                        inputValue.setVisibility(View.GONE);
+                        inputToggle.setVisibility(View.VISIBLE);
+                        buttonLedControl.setVisibility(View.VISIBLE);
+                        break;
+                    case "Specific LED":
+                        inputPin.setVisibility(View.VISIBLE);
+                        inputValue.setVisibility(View.GONE);
+                        inputToggle.setVisibility(View.VISIBLE);
+                        buttonLedControl.setVisibility(View.VISIBLE);
+                        break;
+                    case "Motor":
+                        inputPin.setVisibility(View.GONE);
+                        inputValue.setVisibility(View.VISIBLE);
+                        inputToggle.setVisibility(View.GONE);
+                        buttonLedControl.setVisibility(View.VISIBLE);
+                        break;
+                    default:
+                        inputPin.setVisibility(View.VISIBLE);
+                        inputValue.setVisibility(View.VISIBLE);
+                        inputToggle.setVisibility(View.GONE);
+                        buttonLedControl.setVisibility(View.VISIBLE);
+                        break;
+                }
+            }
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                // 선택되지 않았을 때 처리
+            }
+        });
+
+        // 권한 처리 후 저장된 wifi ip 있는지 체크 후 연동
         checkAndRequestPermissions();
 
     }
@@ -159,6 +216,7 @@ public class MainActivity extends AppCompatActivity {
             connectionStatus.setTextColor(ContextCompat.getColorStateList(getApplicationContext(), R.color.red_700));
             buttonFindEsp32.setText("Find ESP32");
             buttonFindEsp32.setBackgroundTintList(ContextCompat.getColorStateList(getApplicationContext(), R.color.green_500));
+            buttonLedControl.setBackgroundTintList(ContextCompat.getColorStateList(getApplicationContext(), R.color.gray_700));
             showToast("disconnect ESP32");
             saveEsp32Ip(null);
         });
@@ -193,6 +251,7 @@ public class MainActivity extends AppCompatActivity {
                             connectionStatus.setTextColor(ContextCompat.getColorStateList(getApplicationContext(), R.color.green_500));
                             buttonFindEsp32.setText("Disconnect ESP32");
                             buttonFindEsp32.setBackgroundTintList(ContextCompat.getColorStateList(getApplicationContext(), R.color.gray_700));
+                            buttonLedControl.setBackgroundTintList(ContextCompat.getColorStateList(getApplicationContext(), R.color.green_500));
 
                             showToast("ESP32 found at: " + esp32Ip);
                             saveEsp32Ip(esp32Ip);
