@@ -75,7 +75,7 @@
         android:id="@+id/button_led_control"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Control LED"
+        android:text="Apply for Pins"
         android:textAllCaps="false"
         android:backgroundTint="@color/gray_700"/>
 

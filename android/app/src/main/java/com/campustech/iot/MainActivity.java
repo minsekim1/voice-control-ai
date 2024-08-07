@@ -275,37 +275,60 @@ public class MainActivity extends AppCompatActivity {
         }
 
         String pin = inputPin.getText().toString().trim();
-        String value = inputValue.getText().toString().trim();
+        int pinValue = inputToggle.isChecked() ? 0 : 1;
 
-        if (pin.isEmpty() || value.isEmpty()) {
-            Toast.makeText(this, "Please enter both pin and value", Toast.LENGTH_SHORT).show();
+
+        if (!"All LED".equals(inputType) && pin.isEmpty()) {
+            Toast.makeText(this, "Please enter pin number(s)", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        int pinValue = Integer.parseInt(value);
         if (pinValue < 0 || pinValue > 255) {
             Toast.makeText(this, "Brightness value must be between 0 and 255", Toast.LENGTH_SHORT).show();
             return;
         }
 
         OkHttpClient client = new OkHttpClient();
-        String url = "http://" + esp32Ip + "/pin/control?pin=" + pin + "&value=" + pinValue;
+        if ("All LED".equals(inputType)) {
+            int[] allPins = {4, 3, 2, 1, 0, 5, 6, 7, 8, 9, 10, 20, 21};
 
-        Request request = new Request.Builder()
-                .url(url)
-                .build();
+            new Thread(() -> {
+                for (int pinNumber : allPins) {
+                    String url = "http://" + esp32Ip + "/pin/control?pin=" + pinNumber + "&value=" + pinValue;
+                    Request request = new Request.Builder()
+                            .url(url)
+                            .build();
 
-        new Thread(() -> {
-            try {
-                Response response = client.newCall(request).execute();
-                if (response.isSuccessful()) {
-                    Log.i(TAG, "LED controlled successfully");
-                    runOnUiThread(() -> Toast.makeText(MainActivity.this, "LED controlled successfully", Toast.LENGTH_SHORT).show());
+                    try {
+                        Response response = client.newCall(request).execute();
+                        if (response.isSuccessful()) {
+                            Log.i(TAG, "LED on pin " + pinNumber + " controlled successfully");
+                            runOnUiThread(() -> Toast.makeText(MainActivity.this, "LED on pin " + pinNumber + " controlled successfully", Toast.LENGTH_SHORT).show());
+                        }
+                        Thread.sleep(100); // 100ms 대기
+                    } catch (IOException | InterruptedException e) {
+                        Log.e(TAG, "Error controlling LED on pin " + pinNumber, e);
+                    }
                 }
-            } catch (IOException e) {
-                Log.e(TAG, "Error controlling LED", e);
-            }
-        }).start();
+            }).start();
+        } else {
+            String url = "http://" + esp32Ip + "/pin/control?pin=" + pin + "&value=" + pinValue;
+            Request request = new Request.Builder()
+                    .url(url)
+                    .build();
+
+            new Thread(() -> {
+                try {
+                    Response response = client.newCall(request).execute();
+                    if (response.isSuccessful()) {
+                        Log.i(TAG, "LED controlled successfully");
+                        runOnUiThread(() -> Toast.makeText(MainActivity.this, "LED controlled successfully", Toast.LENGTH_SHORT).show());
+                    }
+                } catch (IOException e) {
+                    Log.e(TAG, "Error controlling LED", e);
+                }
+            }).start();
+        }
     }
 
     private String getLocalIpAddress() {
