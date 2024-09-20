@@ -1,19 +1,18 @@
-#include <WiFi.h>
-#include <ESPAsyncWebSrv.h> // ESPAsyncWebSrv 라이브러리 포함
+#include <ESPAsyncWebSrv.h>  // ESPAsyncWebSrv 라이브러리 포함
 #include <Preferences.h>
+#include <WiFi.h>
 
-const char* ap_ssid = "ESP32-AP";
-const char* ap_password = "12345678";
+const char *ap_ssid = "ESP32-AP";
+const char *ap_password = "12345678";
 
 AsyncWebServer server(80);
 
-const int AlertLedPin = 8;
 bool isConnected = false;
 int networkCheckCount = 0;
 
 Preferences preferences;
 
-const char* html = R"rawliteral(
+const char *html = R"rawliteral(
 <!DOCTYPE HTML><html>
 <head>
   <title>WiFi 설정</title>
@@ -32,6 +31,7 @@ const char* html = R"rawliteral(
 )rawliteral";
 
 void handlePinControl(AsyncWebServerRequest *request) {
+    Serial.println('handlePinControl');
     if (!isConnected) {
         request->send(200, "text/plain", "please, connect to wifi.");
         return;
@@ -52,9 +52,8 @@ void handlePinControl(AsyncWebServerRequest *request) {
     int pin = pinNumber.toInt();
     int val = value.toInt();
 
-    pinMode(pin, OUTPUT);
     digitalWrite(pin, val);
-    
+
     request->send(200, "text/plain", response);
 }
 
@@ -91,7 +90,7 @@ void handleSave(AsyncWebServerRequest *request) {
 
     if (WiFi.status() == WL_CONNECTED) {
         isConnected = true;
-        
+
         Serial.println("");
         Serial.println("WiFi 연결 완료!");
         Serial.println("IP 주소: ");
@@ -104,9 +103,9 @@ void handleSave(AsyncWebServerRequest *request) {
 
 void handleNetworkStatus(AsyncWebServerRequest *request) {
     if (WiFi.status() == WL_CONNECTED) {
-      networkCheckCount++;
-      Serial.println("WiFi 연결 성공 반환");
-      Serial.println(networkCheckCount);
+        networkCheckCount++;
+        Serial.println("WiFi 연결 성공 반환");
+        Serial.println(networkCheckCount);
         request->send(200, "text/plain", "true");
     } else {
         Serial.println("WiFi 연결 실패 반환");
@@ -116,9 +115,23 @@ void handleNetworkStatus(AsyncWebServerRequest *request) {
 
 void setup() {
     Serial.begin(115200);
-
-    pinMode(AlertLedPin, OUTPUT);
-    digitalWrite(AlertLedPin, LOW);
+    // 알림용 LED 끄기
+    pinMode(8, OUTPUT);
+    digitalWrite(8, LOW);
+    // 전체 신호 OUTPUT로 설정
+    pinMode(0, OUTPUT);
+    pinMode(1, OUTPUT);
+    pinMode(2, OUTPUT);
+    pinMode(3, OUTPUT);
+    pinMode(4, OUTPUT);
+    pinMode(5, OUTPUT);
+    pinMode(6, OUTPUT);
+    pinMode(7, OUTPUT);
+    pinMode(8, OUTPUT);
+    pinMode(9, OUTPUT);
+    pinMode(10, OUTPUT);
+    pinMode(20, OUTPUT);
+    pinMode(21, OUTPUT);
 
     WiFi.softAP(ap_ssid, ap_password);
     Serial.println("액세스 포인트 모드 설정 완료");
