@@ -275,7 +275,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         String pin = inputPin.getText().toString().trim();
-        int pinValue = inputToggle.isChecked() ? 0 : 1;
+        int pinValue = inputToggle.isChecked() ? 1 : 0;
 
 
         if (!"All LED".equals(inputType) && pin.isEmpty()) {
