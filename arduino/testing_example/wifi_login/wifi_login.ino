@@ -36,7 +36,7 @@ void handlePinControl(AsyncWebServerRequest *request) {
         request->send(200, "text/plain", "please, connect to wifi.");
         return;
     }
-    
+
     String pinNumber = request->arg("pin");
     String value = request->arg("value");
     String response = "Pin " + pinNumber + " set to " + value;
@@ -52,7 +52,12 @@ void handlePinControl(AsyncWebServerRequest *request) {
     int pin = pinNumber.toInt();
     int val = value.toInt();
 
-    digitalWrite(pin, val);
+    // 현재 핀 상태 확인 후 digitalWrite 할지말지 선택
+    int currentVal = digitalRead(pin);
+    if (currentVal != val) {
+        // 설정하려는 값이 현재 핀 상태와 같으면 무시
+        digitalWrite(pin, val);
+    }
 
     request->send(200, "text/plain", response);
 }
@@ -120,18 +125,31 @@ void setup() {
     digitalWrite(8, LOW);
     // 전체 신호 OUTPUT로 설정
     pinMode(0, OUTPUT);
+    digitalWrite(0, LOW);
     pinMode(1, OUTPUT);
+    digitalWrite(1, LOW);
     pinMode(2, OUTPUT);
+    digitalWrite(2, LOW);
     pinMode(3, OUTPUT);
+    digitalWrite(3, LOW);
     pinMode(4, OUTPUT);
+    digitalWrite(4, LOW);
     pinMode(5, OUTPUT);
+    digitalWrite(5, LOW);
     pinMode(6, OUTPUT);
+    digitalWrite(6, LOW);
     pinMode(7, OUTPUT);
+    digitalWrite(7, LOW);
     pinMode(8, OUTPUT);
+    digitalWrite(8, LOW);
     pinMode(9, OUTPUT);
+    digitalWrite(9, LOW);
     pinMode(10, OUTPUT);
+    digitalWrite(10, LOW);
     pinMode(20, OUTPUT);
+    digitalWrite(20, LOW);
     pinMode(21, OUTPUT);
+    digitalWrite(21, LOW);
 
     WiFi.softAP(ap_ssid, ap_password);
     Serial.println("액세스 포인트 모드 설정 완료");
