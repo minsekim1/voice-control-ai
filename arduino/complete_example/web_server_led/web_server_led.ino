@@ -2,12 +2,16 @@
 #include <WiFiAP.h>
 #include <WiFiClient.h>
 
+const int pin8 = 8;  // GPIO 2 핀 사용
+
 // 와이파이의 ssid와 비밀번호 설정
 const char *ssid = "yourAP";
 const char *password = "yourPassword";
 WiFiServer server(80);
 
 void setup() {
+    pinMode(pin8, OUTPUT);
+
     Serial.begin(115200);
     Serial.println();
     Serial.println("Configuring access point...");
@@ -27,8 +31,8 @@ void loop() {
         while (client.connected()) {         // 사용자가 연결되어 있는 동안 무한 루프
             if (client.available()) {        // 만약 클라이언트에서 읽을 바이트가 있으면,
                 char c = client.read();      // 그 바이트를 읽고,
-                Serial.write(c);             // 그 읽은 바이트를 시리얼 모니터에 출력해줌.
-                if (c == '\n') {             // 바이트가 줄 바꿈 문자일 경우
+                // Serial.write(c);             // 클라이언트의 응답을 시리얼 모니터에 출력해줌.
+                if (c == '\n') {  // 바이트가 줄 바꿈 문자일 경우
 
                     // 현재 행이 비어 있는 경우, 두 개의 새 행 문자를 연속해서 입력
                     // 클라이언트 HTTP 요청의 끝인 경우, 응답을 보냄
@@ -56,9 +60,11 @@ void loop() {
 
                 // 클라이언트 요청이 "GET /H"인지 또는 "GET /L"인지 확인:
                 if (currentLine.endsWith("GET /H")) {
+                    digitalWrite(pin8, HIGH);  // turn on the LED
                     Serial.println("HIGH");
                 }
                 if (currentLine.endsWith("GET /L")) {
+                    digitalWrite(pin8, LOW);  // turn off the LED
                     Serial.println("LOW");
                 }
             }
