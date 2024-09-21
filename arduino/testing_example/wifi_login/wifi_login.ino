@@ -8,6 +8,8 @@ const char *ap_password = "12345678";
 AsyncWebServer server(80);
 
 bool isConnected = false;
+// 웹 서버 상태 체크
+bool isServerRunning = false;
 int networkCheckCount = 0;
 
 Preferences preferences;
@@ -31,7 +33,7 @@ const char *html = R"rawliteral(
 )rawliteral";
 
 void handlePinControl(AsyncWebServerRequest *request) {
-    Serial.println('handlePinControl');
+    Serial.println("handlePinControl");
     if (!isConnected) {
         request->send(200, "text/plain", "please, connect to wifi.");
         return;
@@ -45,6 +47,7 @@ void handlePinControl(AsyncWebServerRequest *request) {
     if (pinNumber.length() == 0 || value.length() == 0) {
         request->send(200, "text/plain", "please, enter pin and value.");
         Serial.println("handlePinControl failed.");
+        response = "";  // 메모리 해제
         return;
     }
     Serial.println("handlePinControl success.");
@@ -60,6 +63,7 @@ void handlePinControl(AsyncWebServerRequest *request) {
     }
 
     request->send(200, "text/plain", response);
+    response = "";  // 메모리 해제
 }
 
 void handleSave(AsyncWebServerRequest *request) {
@@ -151,7 +155,8 @@ void setup() {
     pinMode(21, OUTPUT);
     digitalWrite(21, LOW);
 
-    WiFi.softAP(ap_ssid, ap_password);
+    WiFi.softAP(ap_ssid, ap_password, 1, false, 1);  // 최대 4개의 연결 허용
+
     Serial.println("액세스 포인트 모드 설정 완료");
     Serial.print("IP 주소: ");
     Serial.println(WiFi.softAPIP());
@@ -201,9 +206,40 @@ void setup() {
     server.on("/network/status", HTTP_GET, handleNetworkStatus);
 
     server.begin();
+    isServerRunning = true;
     Serial.println("웹 서버 시작");
 }
 
+unsigned long previousMillis = 0;  // 이전 시간 기록 변수
+const long interval = 5000;        // 5초 간격(5000 밀리초)
+
 void loop() {
-    // No need to handle clients manually, AsyncWebServer does this automatically
+    unsigned long currentMillis = millis();
+    if (currentMillis - previousMillis >= interval) {
+        previousMillis = currentMillis;
+
+        checkWebServer();  // 웹 서버 상태 확인
+        printMemoryStatus();
+        checkWiFiConnection();
+    }
+}
+void printMemoryStatus() {
+    Serial.print("Free heap: ");
+    Serial.println(ESP.getFreeHeap());
+}
+
+void checkWiFiConnection() {
+    if (WiFi.status() != WL_CONNECTED) {
+        Serial.println("WiFi disconnected. Reconnecting...");
+        WiFi.reconnect();
+    }
+}
+
+void checkWebServer() {
+    if (!isServerRunning) {
+        Serial.println("웹 서버가 중단됨, 재시작 시도 중...");
+        server.end();    // 기존 서버 종료
+        server.begin();  // 서버 다시 시작
+        isServerRunning = true;
+    }
 }
