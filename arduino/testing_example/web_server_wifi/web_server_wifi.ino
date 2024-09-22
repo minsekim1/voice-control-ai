@@ -9,6 +9,7 @@ const int pin8 = 8;  // GPIO 2 핀 사용
 const char *ssid = "espBoard";
 const char *password = "espBoard123";
 WiFiServer server(80);
+Preferences preferences;  // Preferences 객체 생성
 
 void setup() {
     pinMode(pin8, OUTPUT);
@@ -150,7 +151,7 @@ void connectToWiFi(WiFiClient client, String ssid, String password) {
     WiFi.begin(ssid.c_str(), password.c_str());  // 입력받은 SSID와 비밀번호로 연결 시도
 
     int attempts = 0;                                        // 연결 시도 횟수 제한을 위한 변수
-    while (WiFi.status() != WL_CONNECTED && attempts < 5) {  // 최대 5번 시도
+    while (WiFi.status() != WL_CONNECTED && attempts < 3) {  // 최대 3번 시도
         delay(1000);
         Serial.print(".");
         attempts++;
@@ -176,7 +177,7 @@ void connectToWiFi(WiFiClient client, String ssid, String password) {
         client.print("<p>wifi connected.</p><br/>");
     } else {
         Serial.println("");
-        Serial.println("Failed to connect to Wi-Fi during 5 seconds");
+        Serial.println("Failed to connect to Wi-Fi during 3 seconds");
 
         // HTML 반환 : wifi not connected
         client.print("<p>wifi not connected. please check the password.</p><br/>");
