@@ -171,6 +171,7 @@ void loop() {
         client.stop();
         Serial.print("[System] ");
         Serial.println("Client Disconnected.");
+        Serial.println("");
     }
 }
 
