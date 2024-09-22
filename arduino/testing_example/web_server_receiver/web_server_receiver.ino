@@ -14,23 +14,27 @@ Preferences preferences;  // Preferences 객체 생성
 
 
 Servo myServo;  // Servo 객체 생성
-const int servoPin = 2;  // 서보 신호 핀을 GPIO 2로 설정
+const int servoPin = 9;  // 서보 신호 핀을 GPIO 2로 설정
 
 void setup() {
-    pinMode(0, OUTPUT); // START4x  curl --location 'http://172.30.1.6/pin?pin=0&value=on'
-    pinMode(1, OUTPUT); // <<<<<5x  curl --location 'http://172.30.1.6/pin?pin=1&value=on'
+
+    myServo.setPeriodHertz(50);
+    myServo.attach(servoPin,500,2400);  // GPIO 2에 서보 모터 연결
+    myServo.write(10);
+
+    // pinMode(0, OUTPUT); // START4x  curl --location 'http://172.30.1.6/pin?pin=0&value=on'
+    // pinMode(1, OUTPUT); // <<<<<5x  curl --location 'http://172.30.1.6/pin?pin=1&value=on'
     //pinMode(2, OUTPUT); // <<<<<6x  curl --location 'http://172.30.1.6/pin?pin=2&value=on'
-    myServo.attach(servoPin);  // GPIO 2에 서보 모터 연결
-    pinMode(3, OUTPUT); // <<<<<7x  curl --location 'http://172.30.1.6/pin?pin=3&value=on'
-    pinMode(4, OUTPUT); // END  8x  curl --location 'http://172.30.1.6/pin?pin=4&value=on'
-    pinMode(5, OUTPUT); // START1x  curl --location 'http://172.30.1.6/pin?pin=5&value=on'
-    pinMode(6, OUTPUT); // >>>>>2o  curl --location 'http://172.30.1.6/pin?pin=6&value=on'
-    pinMode(7, OUTPUT); // >>>>>3x  curl --location 'http://172.30.1.6/pin?pin=7&value=on'
-    pinMode(8, OUTPUT); // >>>>>4o  curl --location 'http://172.30.1.6/pin?pin=8&value=on'
-    pinMode(9, OUTPUT); // >>>>>5o  curl --location 'http://172.30.1.6/pin?pin=9&value=on'
-    pinMode(10, OUTPUT);// >>>>>6x  curl --location 'http://172.30.1.6/pin?pin=10&value=on'
-    pinMode(20, OUTPUT);// >>>>>7x  curl --location 'http://172.30.1.6/pin?pin=20&value=on'
-    pinMode(21, OUTPUT);// END  8o  curl --location 'http://172.30.1.6/pin?pin=21&value=on'
+    // pinMode(3, OUTPUT); // <<<<<7x  curl --location 'http://172.30.1.6/pin?pin=3&value=on'
+    // pinMode(4, OUTPUT); // END  8x  curl --location 'http://172.30.1.6/pin?pin=4&value=on'
+    // pinMode(5, OUTPUT); // START1x  curl --location 'http://172.30.1.6/pin?pin=5&value=on'
+    // pinMode(6, OUTPUT); // >>>>>2o  curl --location 'http://172.30.1.6/pin?pin=6&value=on'
+    // pinMode(7, OUTPUT); // >>>>>3x  curl --location 'http://172.30.1.6/pin?pin=7&value=on'
+    // pinMode(8, OUTPUT); // >>>>>4o  curl --location 'http://172.30.1.6/pin?pin=8&value=on'
+    // pinMode(9, OUTPUT); // >>>>>5o  curl --location 'http://172.30.1.6/pin?pin=9&value=on'
+    // pinMode(10, OUTPUT);// >>>>>6x  curl --location 'http://172.30.1.6/pin?pin=10&value=on'
+    // pinMode(20, OUTPUT);// >>>>>7x  curl --location 'http://172.30.1.6/pin?pin=20&value=on'
+    // pinMode(21, OUTPUT);// END  8o  curl --location 'http://172.30.1.6/pin?pin=21&value=on'
 
     Serial.println("");
     Serial.begin(115200);
@@ -68,6 +72,16 @@ void setup() {
 }
 
 void loop() {
+
+// for(int i=10; i < 180; i += 5){
+//   myServo.write(i);
+//   delay(200);
+// }
+// for(int j=175; j>5; j -= 5){
+//   myServo.write(j);
+//   delay(200);
+// }
+
     WiFiClient client = server.available();  // 클라이언트 접속 감지
     if (client) {                            // 만약 클라이언트가 감지되면
         Serial.print("[System] ");
