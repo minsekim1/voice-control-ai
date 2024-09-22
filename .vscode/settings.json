@@ -11,6 +11,7 @@
     "string_view": "c",
     "unordered_map": "c",
     "vector": "c",
-    "istream": "cpp"
+    "istream": "cpp",
+    "stdexcept": "c"
   }
 }

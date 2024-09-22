@@ -107,6 +107,9 @@ void loop() {
 
 // 입력받은 SSID가 주변에 있는지 확인하는 함수
 bool isSSIDAvailable(String ssid) {
+    WiFi.disconnect();  // 네트워크 상태를 초기화
+    delay(1000);        // 약간의 지연 시간 후에 스캔 시작
+
     Serial.println("Scanning for available networks...");
     int numNetworks = WiFi.scanNetworks();  // Wi-Fi 네트워크 스캔
     for (int i = 0; i < numNetworks; i++) {
@@ -122,6 +125,10 @@ bool isSSIDAvailable(String ssid) {
 
 // 클라이언트 모드로 전환하여 Wi-Fi 네트워크에 연결하는 함수
 void connectToWiFi(WiFiClient client, String ssid, String password) {
+    // 연결을 시도하기 전에 WiFi 상태를 초기화
+    WiFi.disconnect();  // 이전 연결 종료
+    delay(1000);        // 약간의 지연을 줘서 네트워크 모듈이 리셋될 시간을 확보
+
     Serial.println("Attempting to connect to Wi-Fi...");
     WiFi.begin(ssid.c_str(), password.c_str());  // 입력받은 SSID와 비밀번호로 연결 시도
 
@@ -150,5 +157,9 @@ void connectToWiFi(WiFiClient client, String ssid, String password) {
 
         // HTML 반환 : wifi not connected
         client.print("<p>wifi not connected. please check the password.</p><br/>");
+
+        // WiFi 상태 초기화 후 AP 모드로 돌아갈 수 있게 재설정
+        WiFi.disconnect();  // 비밀번호가 틀렸을 경우 연결 해제
+        delay(1000);        // 네트워크 재설정을 위한 지연
     }
 }
