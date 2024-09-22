@@ -51,25 +51,47 @@ void loop() {
                     client.println("");
 
 #pragma region 응답 처리
-                    // 요청이 "GET /H"인지 또는 "GET /L"인지 확인
-                    if (request.indexOf("GET /H") >= 0 || request.indexOf("GET /h") >= 0) {
+                    if (request.indexOf("GET /on") >= 0) {
                         digitalWrite(pin8, LOW);  // LED 켜기
                         Serial.println("LED ON");
 
                         // HTTP 응답의 내용
                         client.print("<p>LED on complete</p>");
                         client.print("Click <a href=\"/\">here</a> to commands list<br/>");
-                    } else if (request.indexOf("GET /L") >= 0 || request.indexOf("GET /l") >= 0) {
+                    } else if (request.indexOf("GET /off") >= 0) {
                         digitalWrite(pin8, HIGH);  // LED 끄기
                         Serial.println("LED OFF");
 
                         // HTTP 응답의 내용
                         client.print("<p>LED off complete</p>");
                         client.print("Click <a href=\"/\">here</a> to commands list<br/>");
+                    } else if (request.indexOf("GET /wifi") >= 0) {
+                        Serial.println("Wifi connect");
+
+                        // 1. SSID와 Password 추출
+                        String ssid = request.substring(request.indexOf("ssid=") + 5, request.indexOf("&"));
+                        String password = request.substring(request.indexOf("password=") + 9, request.indexOf(" ", request.indexOf("password=")));
+                        Serial.print("SSID: ");
+                        Serial.println(ssid);
+                        Serial.print("Password: ");
+                        Serial.println(password);
+
+                        // 2. SSID 체크
+                        bool isSSID = isSSIDAvailable(ssid);
+                        if (isSSID) {
+                            // client.print("<p>wifi connect complete</p>");
+                            connectToWiFi(client, ssid, password);
+                        } else {
+                            client.print("<p>no wifi name (cannot find ssid)</p>");
+                        }
+
+                        // HTTP 응답의 내용
+                        client.print("Click <a href=\"/\">here</a> to commands list<br/>");
                     } else {
                         // HTTP 응답의 내용
-                        client.print("Click <a href=\"/H\">here</a> to turn ON the LED.<br/>");
-                        client.print("Click <a href=\"/L\">here</a> to turn OFF the LED.<br/>");
+                        client.print("Click <a href=\"/on\">here</a> to turn ON the LED.<br/>");
+                        client.print("Click <a href=\"/off\">here</a> to turn OFF the LED.<br/>");
+                        client.print("Click <a href=\"/wifi?ssid=MIN_2G&password=4cf18fx940\">here</a> to connect wifi.<br/>");
                     }
 #pragma endregion
 
@@ -103,8 +125,8 @@ void connectToWiFi(WiFiClient client, String ssid, String password) {
     Serial.println("Attempting to connect to Wi-Fi...");
     WiFi.begin(ssid.c_str(), password.c_str());  // 입력받은 SSID와 비밀번호로 연결 시도
 
-    int attempts = 0;                                         // 연결 시도 횟수 제한을 위한 변수
-    while (WiFi.status() != WL_CONNECTED && attempts < 10) {  // 최대 10번 시도
+    int attempts = 0;                                        // 연결 시도 횟수 제한을 위한 변수
+    while (WiFi.status() != WL_CONNECTED && attempts < 5) {  // 최대 5번 시도
         delay(1000);
         Serial.print(".");
         attempts++;
@@ -117,101 +139,16 @@ void connectToWiFi(WiFiClient client, String ssid, String password) {
         Serial.println(WiFi.localIP());
 
         // Wi-Fi 연결에 성공한 후에 AP 모드 종료
-        WiFi.softAPdisconnect(true);
-        Serial.println("AP mode stopped.");
+        // WiFi.softAPdisconnect(true);
+        // Serial.println("AP mode stopped.");
 
         // HTML 반환 : wifi connected
-        client.println("HTTP/1.1 200 OK");
-        client.println("Content-type:text/html");
         client.print("<p>wifi connected.</p><br/>");
     } else {
         Serial.println("");
-        Serial.println("Failed to connect to Wi-Fi after 10 attempts.");
+        Serial.println("Failed to connect to Wi-Fi during 5 seconds");
 
         // HTML 반환 : wifi not connected
-        client.println("HTTP/1.1 200 OK");
-        client.println("Content-type:text/html");
-        client.print("<p>wifi not connected.</p><br/>");
-    }
-}
-
-void onResponse(WiFiClient client, String currentLine) {
-    // // HTTP 헤더는 항상 응답 코드(예: HTTP/1.1 200 확인)로 시작함
-    // // 고객이 무엇이 올지 알 수 있도록 컨텐츠 유형을 선택한 후 다음 빈 줄:
-    // client.println("HTTP/1.1 200 OK");
-    // client.println("Content-type:text/html");
-    // client.println();
-
-    // // HTTP 응답의 내용은 헤더를 따른다:
-    // client.print("Click <a href=\"/H\">here</a> to turn ON the LED.<br/>");
-    // client.print("Click <a href=\"/L\">here</a> to turn OFF the LED.<br/>");
-
-    // // HTTP 응답이 다른 빈 행으로 끝나는 경우:
-    // client.println();
-    // // break out of the while loop:
-    // break;
-
-    Serial.println('onResponse');
-    Serial.println(currentLine);
-
-    // 클라이언트 요청이 "GET /wifi?ssid=xxx&password=xxx"로 시작하는지 확인:
-    if (currentLine.endsWith("GET /wifi")) {
-        // SSID와 패스워드를 추출하여 저장
-        int ssidStart = currentLine.indexOf('=') + 1;
-        int ssidEnd = currentLine.indexOf('&');
-        inputSSID = currentLine.substring(ssidStart, ssidEnd);
-
-        int passwordStart = currentLine.indexOf("password=") + 9;
-        int passwordEnd = currentLine.indexOf(' ', passwordStart);
-        inputPassword = currentLine.substring(passwordStart, passwordEnd);
-
-        Serial.print("Received SSID: ");
-        Serial.println(inputSSID);
-        Serial.print("Received Password: ");
-        Serial.println(inputPassword);
-
-        // 입력된 SSID와 비밀번호를 검증
-        if (isSSIDAvailable(inputSSID)) {
-            connectToWiFi(client, inputSSID, inputPassword);  // Wi-Fi 연결 시도
-        } else {
-            Serial.println("SSID not found.");
-
-            // HTML 반환 : SSID not found
-            client.println("HTTP/1.1 200 OK");
-            client.println("Content-type:text/html");
-            client.print("<p>SSID not found.</p><br/>");
-        }
-    }
-
-    // 클라이언트 요청이 "GET /H"인지 또는 "GET /L"인지 확인:
-    else if (currentLine.endsWith("GET /H")) {
-        digitalWrite(pin8, HIGH);  // turn on the LED
-        Serial.println("HIGH");
-
-        // HTML 반환 : LED OFF
-        client.println("HTTP/1.1 200 OK");
-        client.println("Content-type:text/html");
-        client.print("<p>LED OFF complete.</p><br/>");
-        client.print("Click <a href=\"/H\">here</a> to turn ON the LED.<br/>");
-        client.print("Click <a href=\"/L\">here</a> to turn OFF the LED.<br/>");
-    } else if (currentLine.endsWith("GET /L")) {
-        digitalWrite(pin8, LOW);  // turn off the LED
-        Serial.println("LOW");
-
-        // HTML 반환 : LED OFF
-        client.println("HTTP/1.1 200 OK");
-        client.println("Content-type:text/html");
-        client.print("<p>LED OFF complete.</p><br/>");
-        client.print("Click <a href=\"/H\">here</a> to turn ON the LED.<br/>");
-        client.print("Click <a href=\"/L\">here</a> to turn OFF the LED.<br/>");
-    } else {
-        // HTML 반환 : 기본
-        client.println("HTTP/1.1 200 OK");
-        client.println("Content-type:text/html");
-        // 웹 페이지 제공 (SSID와 비밀번호 입력 폼)
-        client.println("Click <a href=\"/wifi?ssid=MIN_2G&password=4cf18fx940\">here</a> to turn ON the LED.<br/>");
-        // HTTP 응답의 내용은 헤더를 따른다:
-        client.print("Click <a href=\"/H\">here</a> to turn ON the LED.<br/>");
-        client.print("Click <a href=\"/L\">here</a> to turn OFF the LED.<br/>");
+        client.print("<p>wifi not connected. please check the password.</p><br/>");
     }
 }
