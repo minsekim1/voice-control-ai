@@ -12,7 +12,20 @@ WiFiServer server(80);
 Preferences preferences;  // Preferences 객체 생성
 
 void setup() {
-    pinMode(pin8, OUTPUT);
+    pinMode(pin8, OUTPUT); // Defalut Alert
+    pinMode(0, OUTPUT); // START4  curl --location 'http://172.30.1.6/pin?pin=0&value=off'
+    pinMode(1, OUTPUT); // <<<<<5  curl --location 'http://172.30.1.6/pin?pin=1&value=off'
+    pinMode(2, OUTPUT); // <<<<<6  curl --location 'http://172.30.1.6/pin?pin=2&value=off'
+    pinMode(3, OUTPUT); // <<<<<7  curl --location 'http://172.30.1.6/pin?pin=3&value=off'
+    pinMode(4, OUTPUT); // END  8  curl --location 'http://172.30.1.6/pin?pin=4&value=off'
+    pinMode(5, OUTPUT); // START1  curl --location 'http://172.30.1.6/pin?pin=5&value=off'
+    pinMode(6, OUTPUT); // >>>>>2  curl --location 'http://172.30.1.6/pin?pin=6&value=off'
+    pinMode(7, OUTPUT); // >>>>>3  curl --location 'http://172.30.1.6/pin?pin=7&value=off'
+    pinMode(8, OUTPUT); // >>>>>4  curl --location 'http://172.30.1.6/pin?pin=8&value=off'
+    pinMode(9, OUTPUT); // >>>>>5  curl --location 'http://172.30.1.6/pin?pin=9&value=off'
+    pinMode(10, OUTPUT);// >>>>>6  curl --location 'http://172.30.1.6/pin?pin=10&value=off'
+    pinMode(20, OUTPUT);// >>>>>7  curl --location 'http://172.30.1.6/pin?pin=20&value=off'
+    pinMode(21, OUTPUT);// END  8  curl --location 'http://172.30.1.6/pin?pin=21&value=off'
 
     Serial.println("");
     Serial.begin(115200);
@@ -142,13 +155,13 @@ void loop() {
 
                         // 3. LED 컨트롤
                         if (pinValue == "on") {
-                            digitalWrite(pinNumber, LOW);  // LED 켜기
+                            digitalWrite(pinNumber, HIGH);  // LED 켜기
                             Serial.print(" >> ");
                             Serial.println("LED ON");
 
                             client.print("<p>LED on complete</p>");
                         } else if (pinValue == "off") {
-                            digitalWrite(pinNumber, HIGH);  // LED 끄기
+                            digitalWrite(pinNumber, LOW);  // LED 끄기
                             Serial.print(" >> ");
                             Serial.println("LED OFF");
 
