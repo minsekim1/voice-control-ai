@@ -22,8 +22,8 @@ void setup() {
     WiFi.mode(WIFI_AP_STA);
     WiFi.softAP(ssid, password);
     IPAddress myIP = WiFi.softAPIP();
-    Serial.print("AP IP address: ");
     Serial.print("[System] ");
+    Serial.print("AP IP address: ");
     Serial.println(myIP);
     server.begin();
     Serial.print("[System] ");
@@ -209,6 +209,7 @@ void connectToWiFi(WiFiClient client, String ssid, String password) {
     WiFi.begin(ssid.c_str(), password.c_str());  // 입력받은 SSID와 비밀번호로 연결 시도
 
     int attempts = 0;                                        // 연결 시도 횟수 제한을 위한 변수
+    Serial.print(" >> ");
     while (WiFi.status() != WL_CONNECTED && attempts < 3) {  // 최대 3번 시도
         delay(1000);
         Serial.print(".");
@@ -221,7 +222,7 @@ void connectToWiFi(WiFiClient client, String ssid, String password) {
         Serial.println("WiFi connected.");
 
         Serial.print(" >> ");
-        Serial.println("IP address: ");
+        Serial.print("IP address: ");
         Serial.println(WiFi.localIP());
 
         // Wi-Fi 연결에 성공한 후에 AP 모드 종료
