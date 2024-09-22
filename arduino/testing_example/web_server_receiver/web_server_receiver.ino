@@ -145,10 +145,14 @@ void loop() {
                             digitalWrite(pinNumber, LOW);  // LED 켜기
                             Serial.print(" >> ");
                             Serial.println("LED ON");
+
+                            client.print("<p>LED on complete</p>");
                         } else if (pinValue == "off") {
                             digitalWrite(pinNumber, HIGH);  // LED 끄기
                             Serial.print(" >> ");
                             Serial.println("LED OFF");
+
+                            client.print("<p>LED off complete</p>");
                         } else {
                             Serial.print(" >> ");
                             Serial.println("Invalid value for pin control");
