@@ -44,6 +44,8 @@ void setup() {
         connectToWiFi(client, saved_ssid, saved_password);
     }
 #pragma endregion
+
+    Serial.println("");
 }
 
 void loop() {
