@@ -45,7 +45,7 @@ void setup() {
 void loop() {
     WiFiClient client = server.available();  // 클라이언트 접속 감지
     if (client) {                            // 만약 클라이언트가 감지되면
-        Serial.println("New Client.");       // 클라이언트 연결 메시지 출력
+        Serial.println(" >> New Client.");       // 클라이언트 연결 메시지 출력
         char buffer[300];                    // 데이터를 저장할 버퍼 선언 (300바이트 크기)
         int length;                          // 읽어들인 데이터의 길이를 저장할 변수
         bool requestHandled = false;         // 요청이 처리되었는지 여부를 체크하는 플래그
@@ -152,7 +152,7 @@ void loop() {
         }
         // 클라이언트 연결 종료
         client.stop();
-        Serial.println("Client Disconnected.");
+        Serial.println(" << Client Disconnected.");
     }
 }
 
