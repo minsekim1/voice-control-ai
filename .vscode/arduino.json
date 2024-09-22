@@ -1,0 +1,7 @@
+{
+    "configuration": "CDCOnBoot=cdc,PartitionScheme=default,CPUFreq=160,FlashMode=qio,FlashFreq=80,FlashSize=4M,UploadSpeed=921600,DebugLevel=none,EraseFlash=none,ZigbeeMode=default",
+    "board": "esp32:esp32:adafruit_qtpy_esp32c3",
+    "port": "/dev/tty.usbmodem2201",
+    "programmer": "esptool",
+    "sketch": "arduino/testing_example/web_server_wifi/web_server_wifi.ino"
+}

@@ -36,38 +36,44 @@ void loop() {
         bool requestHandled = false;         // 요청이 처리되었는지 여부를 체크하는 플래그
 
         while (client.connected() && !requestHandled) {  // 클라이언트가 연결되어 있는 동안, 요청 처리 전까지
-            if (client.available()) {        // 클라이언트에서 데이터를 읽을 준비가 되었으면
+            if (client.available()) {                    // 클라이언트에서 데이터를 읽을 준비가 되었으면
                 // 캐리지 리턴('\r') 문자가 나올 때까지 데이터를 읽고 버퍼에 저장
                 length = client.readBytesUntil('\n', buffer, sizeof(buffer) - 1);
-                buffer[length] = 0;  // 읽어들인 데이터를 문자열로 처리하기 위해 마지막에 널 문자 추가
+                buffer[length] = 0;               // 읽어들인 데이터를 문자열로 처리하기 위해 마지막에 널 문자 추가
                 String request = String(buffer);  // 버퍼 내용을 String 객체로 변환
                 Serial.println(request);          // 클라이언트 요청을 시리얼 모니터에 출력
 
-              
                 // HTTP 요청의 끝은 빈 줄로 표시되므로, 요청이 끝났으면 응답을 보냄
                 if (request.indexOf(" HTTP/") || request == "\r") {
+                    // HTTP 응답 헤더
+                    client.println("HTTP/1.1 200 OK");
+                    client.println("Content-type:text/html");
+                    client.println("");
+
+#pragma region 응답 처리
                     // 요청이 "GET /H"인지 또는 "GET /L"인지 확인
-                  if (request.indexOf("GET /H") >= 0 || request.indexOf("GET /h") >= 0) {
-                      digitalWrite(pin8, HIGH);  // LED 켜기
-                      Serial.println("LED ON");
-                  }
-                  if (request.indexOf("GET /L") >= 0 || request.indexOf("GET /l") >= 0) {
-                      digitalWrite(pin8, LOW);   // LED 끄기
-                      Serial.println("LED OFF");
-                  }
+                    if (request.indexOf("GET /H") >= 0 || request.indexOf("GET /h") >= 0) {
+                        digitalWrite(pin8, LOW);  // LED 켜기
+                        Serial.println("LED ON");
 
-                  // HTTP 응답 헤더
-                  client.println("HTTP/1.1 200 OK");
-                  client.println("Content-type:text/html");
-                  client.println();
+                        // HTTP 응답의 내용
+                        client.print("<p>LED on complete</p>");
+                        client.print("Click <a href=\"/\">here</a> to commands list<br/>");
+                    } else if (request.indexOf("GET /L") >= 0 || request.indexOf("GET /l") >= 0) {
+                        digitalWrite(pin8, HIGH);  // LED 끄기
+                        Serial.println("LED OFF");
 
-                  // HTTP 응답의 내용
-                  client.print("Click <a href=\"/H\">here</a> to turn ON the LED.<br>");
-                  client.print("Click <a href=\"/L\">here</a> to turn OFF the LED.<br>");
+                        // HTTP 응답의 내용
+                        client.print("<p>LED off complete</p>");
+                        client.print("Click <a href=\"/\">here</a> to commands list<br/>");
+                    } else {
+                        // HTTP 응답의 내용
+                        client.print("Click <a href=\"/H\">here</a> to turn ON the LED.<br/>");
+                        client.print("Click <a href=\"/L\">here</a> to turn OFF the LED.<br/>");
+                    }
+#pragma endregion
 
-                  // 응답을 마치고 빈 줄을 추가하여 클라이언트가 데이터를 처리할 수 있도록 함
-                  client.println();
-                  requestHandled = true;  // 요청이 처리되었음을 표시
+                    requestHandled = true;  // 요청이 처리되었음을 표시
                 }
             }
         }
@@ -137,8 +143,8 @@ void onResponse(WiFiClient client, String currentLine) {
     // client.println();
 
     // // HTTP 응답의 내용은 헤더를 따른다:
-    // client.print("Click <a href=\"/H\">here</a> to turn ON the LED.<br>");
-    // client.print("Click <a href=\"/L\">here</a> to turn OFF the LED.<br>");
+    // client.print("Click <a href=\"/H\">here</a> to turn ON the LED.<br/>");
+    // client.print("Click <a href=\"/L\">here</a> to turn OFF the LED.<br/>");
 
     // // HTTP 응답이 다른 빈 행으로 끝나는 경우:
     // client.println();
