@@ -14,6 +14,7 @@ Preferences preferences;  // Preferences 객체 생성
 void setup() {
     pinMode(pin8, OUTPUT);
 
+    Serial.println("");
     Serial.begin(115200);
     Serial.println();
     Serial.print("[System] ");
