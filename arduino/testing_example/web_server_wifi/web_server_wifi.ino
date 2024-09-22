@@ -1,3 +1,4 @@
+#include <Preferences.h>
 #include <WiFi.h>
 #include <WiFiAP.h>
 #include <WiFiClient.h>
@@ -8,10 +9,6 @@ const int pin8 = 8;  // GPIO 2 핀 사용
 const char *ssid = "espBoard";
 const char *password = "espBoard123";
 WiFiServer server(80);
-
-// 사용자가 입력한 Wi-Fi 네트워크 정보
-String inputSSID = "";
-String inputPassword = "";
 
 void setup() {
     pinMode(pin8, OUTPUT);
@@ -27,6 +24,21 @@ void setup() {
     Serial.println(myIP);
     server.begin();
     Serial.println("Server started");
+
+#pragma region 저장된 와이파이 ssid/pw 가져오기
+    // Preferences에서 저장된 Wi-Fi 정보 불러오기
+    preferences.begin("wifi-config", true);  // 읽기 모드로 열기
+    String saved_ssid = preferences.getString("ssid", "");
+    String saved_password = preferences.getString("password", "");
+    preferences.end();
+
+    if (saved_ssid != "" && saved_password != "") {
+        // 저장된 Wi-Fi 정보가 있다면 스테이션 모드로 연결 시도
+        Serial.println("Attempting to connect to saved Wi-Fi...");
+        WiFiClient client = server.available();
+        connectToWiFi(client, saved_ssid, saved_password);
+    }
+#pragma endregion
 }
 
 void loop() {
@@ -110,12 +122,12 @@ void loop() {
 // 입력받은 SSID가 주변에 있는지 확인하는 함수
 bool isSSIDAvailable(String ssid) {
     WiFi.disconnect(true);  // 이전 연결 및 캐싱된 정보 모두 삭제
-    WiFi.scanDelete();  // 이전 스캔 결과 삭제
-    delay(1000);        // 약간의 지연 시간 후에 스캔 시작
+    WiFi.scanDelete();      // 이전 스캔 결과 삭제
+    delay(1000);            // 약간의 지연 시간 후에 스캔 시작
 
     Serial.println("Scanning for available networks...");
     int numNetworks = WiFi.scanNetworks();  // Wi-Fi 네트워크 스캔
-    
+
     for (int i = 0; i < numNetworks; i++) {
         Serial.println("Scanning for available networks..." + ssid);
         if (WiFi.SSID(i) == ssid) {  // 입력된 SSID가 존재하는지 확인
@@ -132,7 +144,7 @@ bool isSSIDAvailable(String ssid) {
 void connectToWiFi(WiFiClient client, String ssid, String password) {
     // 연결을 시도하기 전에 WiFi 상태를 초기화
     WiFi.disconnect(true);  // 이전 연결 및 캐싱된 정보 모두 삭제
-    delay(1000);        // 약간의 지연을 줘서 네트워크 모듈이 리셋될 시간을 확보
+    delay(1000);            // 약간의 지연을 줘서 네트워크 모듈이 리셋될 시간을 확보
 
     Serial.println("Attempting to connect to Wi-Fi...");
     WiFi.begin(ssid.c_str(), password.c_str());  // 입력받은 SSID와 비밀번호로 연결 시도
@@ -153,6 +165,12 @@ void connectToWiFi(WiFiClient client, String ssid, String password) {
         // Wi-Fi 연결에 성공한 후에 AP 모드 종료
         // WiFi.softAPdisconnect(true);
         // Serial.println("AP mode stopped.");
+
+        // SSID 및 비밀번호를 Preferences에 저장
+        preferences.begin("wifi-config", false);  // 쓰기 모드로 열기
+        preferences.putString("ssid", ssid);
+        preferences.putString("password", password);
+        preferences.end();
 
         // HTML 반환 : wifi connected
         client.print("<p>wifi connected.</p><br/>");
