@@ -28,102 +28,50 @@ void setup() {
 }
 
 void loop() {
-    WiFiClient client = server.available();  // 접속 감지
-    if (client) {                            // 만약 사용자가 감지되면,
-        Serial.println("New Client.");       // 시리얼 포트에 메시지 출력
-        String currentLine = "";             // 클라이언트에서 들어오는 데이터를 저장할 문자열 만듦
-        while (client.connected()) {         // 사용자가 연결되어 있는 동안 무한 루프
-            if (client.available()) {
-                char c = client.read();  // 그 바이트를 읽고,
-                                         // Serial.write(c);          // 클라이언트의 응답을 시리얼 모니터에 출력해줌.
-                if (c == '\n') {         // 바이트가 줄 바꿈 문자일 경우
+    WiFiClient client = server.available();  // 클라이언트 접속 감지
+    if (client) {                            // 만약 클라이언트가 감지되면
+        Serial.println("New Client.");       // 클라이언트 연결 메시지 출력
+        char buffer[300];                    // 데이터를 저장할 버퍼 선언 (300바이트 크기)
+        int length;                          // 읽어들인 데이터의 길이를 저장할 변수
+        bool requestHandled = false;         // 요청이 처리되었는지 여부를 체크하는 플래그
 
-                    // 현재 행이 비어 있는 경우, 두 개의 새 행 문자를 연속해서 입력
-                    // 클라이언트 HTTP 요청의 끝인 경우, 응답을 보냄
-                    if (currentLine.length() == 0) {
-                        // HTTP 헤더는 항상 응답 코드(예: HTTP/1.1 200 확인)로 시작함
-                        // 고객이 무엇이 올지 알 수 있도록 컨텐츠 유형을 선택한 후 다음 빈 줄:
-                        client.println("HTTP/1.1 200 OK");
-                        client.println("Content-type:text/html");
-                        client.println();
+        while (client.connected() && !requestHandled) {  // 클라이언트가 연결되어 있는 동안, 요청 처리 전까지
+            if (client.available()) {        // 클라이언트에서 데이터를 읽을 준비가 되었으면
+                // 캐리지 리턴('\r') 문자가 나올 때까지 데이터를 읽고 버퍼에 저장
+                length = client.readBytesUntil('\n', buffer, sizeof(buffer) - 1);
+                buffer[length] = 0;  // 읽어들인 데이터를 문자열로 처리하기 위해 마지막에 널 문자 추가
+                String request = String(buffer);  // 버퍼 내용을 String 객체로 변환
+                Serial.println(request);          // 클라이언트 요청을 시리얼 모니터에 출력
 
-                        // HTTP 응답의 내용은 헤더를 따른다:
-                        client.print("Click <a href=\"/H\">here</a> to turn ON the LED.<br>");
-                        client.print("Click <a href=\"/L\">here</a> to turn OFF the LED.<br>");
+              
+                // HTTP 요청의 끝은 빈 줄로 표시되므로, 요청이 끝났으면 응답을 보냄
+                if (request.indexOf(" HTTP/") || request == "\r") {
+                    // 요청이 "GET /H"인지 또는 "GET /L"인지 확인
+                  if (request.indexOf("GET /H") >= 0 || request.indexOf("GET /h") >= 0) {
+                      digitalWrite(pin8, HIGH);  // LED 켜기
+                      Serial.println("LED ON");
+                  }
+                  if (request.indexOf("GET /L") >= 0 || request.indexOf("GET /l") >= 0) {
+                      digitalWrite(pin8, LOW);   // LED 끄기
+                      Serial.println("LED OFF");
+                  }
 
-                        // HTTP 응답이 다른 빈 행으로 끝나는 경우:
-                        client.println();
-                        // break out of the while loop:
-                        break;
-                    } else {  // 새 회선이 있으면 current line 삭제:
-                        currentLine = "";
-                    }
-                } else if (c != '\r') {  // 리턴 문자 말고 다른 것이 있으면
-                    currentLine += c;    // currentLine의 끝에 추가함
-                }
+                  // HTTP 응답 헤더
+                  client.println("HTTP/1.1 200 OK");
+                  client.println("Content-type:text/html");
+                  client.println();
 
-                // 클라이언트 요청이 "GET /wifi?ssid=xxx&password=xxx"로 시작하는지 확인:
-                if (currentLine.endsWith("GET /wifi")) {
-                    // SSID와 패스워드를 추출하여 저장
-                    int ssidStart = currentLine.indexOf('=') + 1;
-                    int ssidEnd = currentLine.indexOf('&');
-                    inputSSID = currentLine.substring(ssidStart, ssidEnd);
+                  // HTTP 응답의 내용
+                  client.print("Click <a href=\"/H\">here</a> to turn ON the LED.<br>");
+                  client.print("Click <a href=\"/L\">here</a> to turn OFF the LED.<br>");
 
-                    int passwordStart = currentLine.indexOf("password=") + 9;
-                    int passwordEnd = currentLine.indexOf(' ', passwordStart);
-                    inputPassword = currentLine.substring(passwordStart, passwordEnd);
-
-                    Serial.print("Received SSID: ");
-                    Serial.println(inputSSID);
-                    Serial.print("Received Password: ");
-                    Serial.println(inputPassword);
-
-                    // 입력된 SSID와 비밀번호를 검증
-                    if (isSSIDAvailable(inputSSID)) {
-                        connectToWiFi(client, inputSSID, inputPassword);  // Wi-Fi 연결 시도
-                    } else {
-                        Serial.println("SSID not found.");
-
-                        // HTML 반환 : SSID not found
-                        client.println("HTTP/1.1 200 OK");
-                        client.println("Content-type:text/html");
-                        client.print("<p>SSID not found.</p><br/>");
-                    }
-                }
-
-                // 클라이언트 요청이 "GET /H"인지 또는 "GET /L"인지 확인:
-                else if (currentLine.endsWith("GET /H")) {
-                    digitalWrite(pin8, HIGH);  // turn on the LED
-                    Serial.println("HIGH");
-
-                    // HTML 반환 : LED OFF
-                    client.println("HTTP/1.1 200 OK");
-                    client.println("Content-type:text/html");
-                    client.print("<p>LED OFF complete.</p><br/>");
-                    client.print("Click <a href=\"/H\">here</a> to turn ON the LED.<br/>");
-                    client.print("Click <a href=\"/L\">here</a> to turn OFF the LED.<br/>");
-                } else if (currentLine.endsWith("GET /L")) {
-                    digitalWrite(pin8, LOW);  // turn off the LED
-                    Serial.println("LOW");
-
-                    // HTML 반환 : LED OFF
-                    client.println("HTTP/1.1 200 OK");
-                    client.println("Content-type:text/html");
-                    client.print("<p>LED OFF complete.</p><br/>");
-                    client.print("Click <a href=\"/H\">here</a> to turn ON the LED.<br/>");
-                    client.print("Click <a href=\"/L\">here</a> to turn OFF the LED.<br/>");
-                } else {
-                    // HTML 반환 : 기본
-                    client.println("HTTP/1.1 200 OK");
-                    client.println("Content-type:text/html");
-                    // 웹 페이지 제공 (SSID와 비밀번호 입력 폼)
-                    client.println("Click <a href=\"/wifi?ssid=MIN_2G&password=4cf18fx940\">here</a> to turn ON the LED.<br/>");
-                    // HTTP 응답의 내용은 헤더를 따른다:
-                    client.print("Click <a href=\"/H\">here</a> to turn ON the LED.<br/>");
-                    client.print("Click <a href=\"/L\">here</a> to turn OFF the LED.<br/>");
+                  // 응답을 마치고 빈 줄을 추가하여 클라이언트가 데이터를 처리할 수 있도록 함
+                  client.println();
+                  requestHandled = true;  // 요청이 처리되었음을 표시
                 }
             }
         }
+        // 클라이언트 연결 종료
         client.stop();
         Serial.println("Client Disconnected.");
     }
@@ -178,5 +126,86 @@ void connectToWiFi(WiFiClient client, String ssid, String password) {
         client.println("HTTP/1.1 200 OK");
         client.println("Content-type:text/html");
         client.print("<p>wifi not connected.</p><br/>");
+    }
+}
+
+void onResponse(WiFiClient client, String currentLine) {
+    // // HTTP 헤더는 항상 응답 코드(예: HTTP/1.1 200 확인)로 시작함
+    // // 고객이 무엇이 올지 알 수 있도록 컨텐츠 유형을 선택한 후 다음 빈 줄:
+    // client.println("HTTP/1.1 200 OK");
+    // client.println("Content-type:text/html");
+    // client.println();
+
+    // // HTTP 응답의 내용은 헤더를 따른다:
+    // client.print("Click <a href=\"/H\">here</a> to turn ON the LED.<br>");
+    // client.print("Click <a href=\"/L\">here</a> to turn OFF the LED.<br>");
+
+    // // HTTP 응답이 다른 빈 행으로 끝나는 경우:
+    // client.println();
+    // // break out of the while loop:
+    // break;
+
+    Serial.println('onResponse');
+    Serial.println(currentLine);
+
+    // 클라이언트 요청이 "GET /wifi?ssid=xxx&password=xxx"로 시작하는지 확인:
+    if (currentLine.endsWith("GET /wifi")) {
+        // SSID와 패스워드를 추출하여 저장
+        int ssidStart = currentLine.indexOf('=') + 1;
+        int ssidEnd = currentLine.indexOf('&');
+        inputSSID = currentLine.substring(ssidStart, ssidEnd);
+
+        int passwordStart = currentLine.indexOf("password=") + 9;
+        int passwordEnd = currentLine.indexOf(' ', passwordStart);
+        inputPassword = currentLine.substring(passwordStart, passwordEnd);
+
+        Serial.print("Received SSID: ");
+        Serial.println(inputSSID);
+        Serial.print("Received Password: ");
+        Serial.println(inputPassword);
+
+        // 입력된 SSID와 비밀번호를 검증
+        if (isSSIDAvailable(inputSSID)) {
+            connectToWiFi(client, inputSSID, inputPassword);  // Wi-Fi 연결 시도
+        } else {
+            Serial.println("SSID not found.");
+
+            // HTML 반환 : SSID not found
+            client.println("HTTP/1.1 200 OK");
+            client.println("Content-type:text/html");
+            client.print("<p>SSID not found.</p><br/>");
+        }
+    }
+
+    // 클라이언트 요청이 "GET /H"인지 또는 "GET /L"인지 확인:
+    else if (currentLine.endsWith("GET /H")) {
+        digitalWrite(pin8, HIGH);  // turn on the LED
+        Serial.println("HIGH");
+
+        // HTML 반환 : LED OFF
+        client.println("HTTP/1.1 200 OK");
+        client.println("Content-type:text/html");
+        client.print("<p>LED OFF complete.</p><br/>");
+        client.print("Click <a href=\"/H\">here</a> to turn ON the LED.<br/>");
+        client.print("Click <a href=\"/L\">here</a> to turn OFF the LED.<br/>");
+    } else if (currentLine.endsWith("GET /L")) {
+        digitalWrite(pin8, LOW);  // turn off the LED
+        Serial.println("LOW");
+
+        // HTML 반환 : LED OFF
+        client.println("HTTP/1.1 200 OK");
+        client.println("Content-type:text/html");
+        client.print("<p>LED OFF complete.</p><br/>");
+        client.print("Click <a href=\"/H\">here</a> to turn ON the LED.<br/>");
+        client.print("Click <a href=\"/L\">here</a> to turn OFF the LED.<br/>");
+    } else {
+        // HTML 반환 : 기본
+        client.println("HTTP/1.1 200 OK");
+        client.println("Content-type:text/html");
+        // 웹 페이지 제공 (SSID와 비밀번호 입력 폼)
+        client.println("Click <a href=\"/wifi?ssid=MIN_2G&password=4cf18fx940\">here</a> to turn ON the LED.<br/>");
+        // HTTP 응답의 내용은 헤더를 따른다:
+        client.print("Click <a href=\"/H\">here</a> to turn ON the LED.<br/>");
+        client.print("Click <a href=\"/L\">here</a> to turn OFF the LED.<br/>");
     }
 }
