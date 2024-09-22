@@ -2,6 +2,7 @@
 #include <WiFi.h>
 #include <WiFiAP.h>
 #include <WiFiClient.h>
+#include <ESP32Servo.h> // 서보 모터 제어를 위한 라이브러리
 
 const int pin8 = 8;  // GPIO 2 핀 사용
 
@@ -11,21 +12,25 @@ const char *password = "espBoard123";
 WiFiServer server(80);
 Preferences preferences;  // Preferences 객체 생성
 
+
+Servo myServo;  // Servo 객체 생성
+const int servoPin = 2;  // 서보 신호 핀을 GPIO 2로 설정
+
 void setup() {
-    pinMode(pin8, OUTPUT); // Defalut Alert
-    pinMode(0, OUTPUT); // START4  curl --location 'http://172.30.1.6/pin?pin=0&value=off'
-    pinMode(1, OUTPUT); // <<<<<5  curl --location 'http://172.30.1.6/pin?pin=1&value=off'
-    pinMode(2, OUTPUT); // <<<<<6  curl --location 'http://172.30.1.6/pin?pin=2&value=off'
-    pinMode(3, OUTPUT); // <<<<<7  curl --location 'http://172.30.1.6/pin?pin=3&value=off'
-    pinMode(4, OUTPUT); // END  8  curl --location 'http://172.30.1.6/pin?pin=4&value=off'
-    pinMode(5, OUTPUT); // START1  curl --location 'http://172.30.1.6/pin?pin=5&value=off'
-    pinMode(6, OUTPUT); // >>>>>2  curl --location 'http://172.30.1.6/pin?pin=6&value=off'
-    pinMode(7, OUTPUT); // >>>>>3  curl --location 'http://172.30.1.6/pin?pin=7&value=off'
-    pinMode(8, OUTPUT); // >>>>>4  curl --location 'http://172.30.1.6/pin?pin=8&value=off'
-    pinMode(9, OUTPUT); // >>>>>5  curl --location 'http://172.30.1.6/pin?pin=9&value=off'
-    pinMode(10, OUTPUT);// >>>>>6  curl --location 'http://172.30.1.6/pin?pin=10&value=off'
-    pinMode(20, OUTPUT);// >>>>>7  curl --location 'http://172.30.1.6/pin?pin=20&value=off'
-    pinMode(21, OUTPUT);// END  8  curl --location 'http://172.30.1.6/pin?pin=21&value=off'
+    pinMode(0, OUTPUT); // START4x  curl --location 'http://172.30.1.6/pin?pin=0&value=on'
+    pinMode(1, OUTPUT); // <<<<<5x  curl --location 'http://172.30.1.6/pin?pin=1&value=on'
+    //pinMode(2, OUTPUT); // <<<<<6x  curl --location 'http://172.30.1.6/pin?pin=2&value=on'
+    myServo.attach(servoPin);  // GPIO 2에 서보 모터 연결
+    pinMode(3, OUTPUT); // <<<<<7x  curl --location 'http://172.30.1.6/pin?pin=3&value=on'
+    pinMode(4, OUTPUT); // END  8x  curl --location 'http://172.30.1.6/pin?pin=4&value=on'
+    pinMode(5, OUTPUT); // START1x  curl --location 'http://172.30.1.6/pin?pin=5&value=on'
+    pinMode(6, OUTPUT); // >>>>>2o  curl --location 'http://172.30.1.6/pin?pin=6&value=on'
+    pinMode(7, OUTPUT); // >>>>>3x  curl --location 'http://172.30.1.6/pin?pin=7&value=on'
+    pinMode(8, OUTPUT); // >>>>>4o  curl --location 'http://172.30.1.6/pin?pin=8&value=on'
+    pinMode(9, OUTPUT); // >>>>>5o  curl --location 'http://172.30.1.6/pin?pin=9&value=on'
+    pinMode(10, OUTPUT);// >>>>>6x  curl --location 'http://172.30.1.6/pin?pin=10&value=on'
+    pinMode(20, OUTPUT);// >>>>>7x  curl --location 'http://172.30.1.6/pin?pin=20&value=on'
+    pinMode(21, OUTPUT);// END  8o  curl --location 'http://172.30.1.6/pin?pin=21&value=on'
 
     Serial.println("");
     Serial.begin(115200);
@@ -89,97 +94,136 @@ void loop() {
 
 #pragma region 응답 처리
                     if (request.indexOf("GET /on") >= 0) {
-                        digitalWrite(pin8, LOW);  // LED 켜기
-                        Serial.print(" >> ");
-                        Serial.println("LED ON");
+                      digitalWrite(pin8, LOW);  // LED 켜기
+                      Serial.print(" >> ");
+                      Serial.println("LED ON");
 
-                        // HTTP 응답의 내용
-                        client.print("<p>LED on complete</p>");
-                        client.print("Click <a href=\"/\">here</a> to commands list<br/>");
+                      // HTTP 응답의 내용
+                      client.print("<p>LED on complete</p>");
+                      client.print("Click <a href=\"/\">here</a> to commands list<br/>");
                     } else if (request.indexOf("GET /off") >= 0) {
-                        digitalWrite(pin8, HIGH);  // LED 끄기
-                        Serial.print(" >> ");
-                        Serial.println("LED OFF");
+                      digitalWrite(pin8, HIGH);  // LED 끄기
+                      Serial.print(" >> ");
+                      Serial.println("LED OFF");
 
-                        // HTTP 응답의 내용
-                        client.print("<p>LED off complete</p>");
-                        client.print("Click <a href=\"/\">here</a> to commands list<br/>");
+                      // HTTP 응답의 내용
+                      client.print("<p>LED off complete</p>");
+                      client.print("Click <a href=\"/\">here</a> to commands list<br/>");
                     } else if (request.indexOf("GET /wifi") >= 0) {
-                        Serial.print(" >> ");
-                        Serial.println("Wifi connect");
+                      Serial.print(" >> ");
+                      Serial.println("Wifi connect");
 
-                        // 1. SSID와 Password 추출
-                        String ssid = request.substring(request.indexOf("ssid=") + 5, request.indexOf("&"));
-                        String password = request.substring(request.indexOf("password=") + 9, request.indexOf(" ", request.indexOf("password=")));
-                        Serial.print(" >> ");
-                        Serial.print("SSID: ");
-                        Serial.println(ssid);
-                        Serial.print(" >> ");
-                        Serial.print("Password: ");
-                        Serial.println(password);
+                      // 1. SSID와 Password 추출
+                      String ssid = request.substring(request.indexOf("ssid=") + 5, request.indexOf("&"));
+                      String password = request.substring(request.indexOf("password=") + 9, request.indexOf(" ", request.indexOf("password=")));
+                      Serial.print(" >> ");
+                      Serial.print("SSID: ");
+                      Serial.println(ssid);
+                      Serial.print(" >> ");
+                      Serial.print("Password: ");
+                      Serial.println(password);
 
-                        // 2. SSID 체크
-                        bool isSSID = isSSIDAvailable(ssid);
-                        if (isSSID) {
-                            // client.print("<p>wifi connect complete</p>");
-                            connectToWiFi(client, ssid, password);
-                        } else {
-                            client.print("<p>no wifi name (cannot find ssid)</p>");
-                        }
+                      // 2. SSID 체크
+                      bool isSSID = isSSIDAvailable(ssid);
+                      if (isSSID) {
+                          // client.print("<p>wifi connect complete</p>");
+                          connectToWiFi(client, ssid, password);
+                      } else {
+                          client.print("<p>no wifi name (cannot find ssid)</p>");
+                      }
 
-                        // HTTP 응답의 내용
-                        client.print("Click <a href=\"/\">here</a> to commands list<br/>");
-                    }else if (request.indexOf("GET /pin") >= 0) {
-                        Serial.print(" >> ");
-                        Serial.println("LED Pin control");
+                      // HTTP 응답의 내용
+                      client.print("Click <a href=\"/\">here</a> to commands list<br/>");
+                    } else if (request.indexOf("GET /pin") >= 0) {
+                      // 6, 9, 21번 핀만 되는듯
+                      Serial.print(" >> ");
+                      Serial.println("LED Pin control");
 
-                        // 1. pin 번호와 value 추출
-                        int pinNumber = request.substring(request.indexOf("pin=") + 4, request.indexOf("&")).toInt();
-                        String pinValue = request.substring(request.indexOf("value=") + 6, request.indexOf(" ", request.indexOf("value=")));
-                        
-                        Serial.print(" >> ");
-                        Serial.print("pinNumber: ");
-                        Serial.println(pinNumber);
-                        Serial.print(" >> ");
-                        Serial.print("pinValue: ");
-                        Serial.println(pinValue);
+                      // 1. pin 번호와 value 추출
+                      int pinNumber = request.substring(request.indexOf("pin=") + 4, request.indexOf("&")).toInt();
+                      String pinValue = request.substring(request.indexOf("value=") + 6, request.indexOf(" ", request.indexOf("value=")));
+                      
+                      Serial.print(" >> ");
+                      Serial.print("pinNumber: ");
+                      Serial.println(pinNumber);
+                      Serial.print(" >> ");
+                      Serial.print("pinValue: ");
+                      Serial.println(pinValue);
 
-                        // 2. pinNumver & pinValue 체크
-                        // bool isSSID = isSSIDAvailable(ssid);
-                        // if (isSSID) {
-                        //     // client.print("<p>wifi connect complete</p>");
-                        //     connectToWiFi(client, ssid, password);
-                        // } else {
-                        //     client.print("<p>no wifi name (cannot find ssid)</p>");
-                        // }
+                      // 2. pinNumver & pinValue 체크
+                      // bool isSSID = isSSIDAvailable(ssid);
+                      // if (isSSID) {
+                      //     // client.print("<p>wifi connect complete</p>");
+                      //     connectToWiFi(client, ssid, password);
+                      // } else {
+                      //     client.print("<p>no wifi name (cannot find ssid)</p>");
+                      // }
 
-                        // 3. LED 컨트롤
-                        if (pinValue == "on") {
-                            digitalWrite(pinNumber, HIGH);  // LED 켜기
-                            Serial.print(" >> ");
-                            Serial.println("LED ON");
+                      // 3. LED 컨트롤
+                      if (pinValue == "on") {
+                          digitalWrite(pinNumber, HIGH);  // LED 켜기
+                          Serial.print(" >> ");
+                          Serial.println("LED ON");
 
-                            client.print("<p>LED on complete</p>");
-                        } else if (pinValue == "off") {
-                            digitalWrite(pinNumber, LOW);  // LED 끄기
-                            Serial.print(" >> ");
-                            Serial.println("LED OFF");
+                          client.print("<p>LED on complete</p>");
+                      } else if (pinValue == "off") {
+                          digitalWrite(pinNumber, LOW);  // LED 끄기
+                          Serial.print(" >> ");
+                          Serial.println("LED OFF");
 
-                            client.print("<p>LED off complete</p>");
-                        } else {
-                            Serial.print(" >> ");
-                            Serial.println("Invalid value for pin control");
-                            client.println("Invalid value! Use 'on' or 'off'.");
-                        }
+                          client.print("<p>LED off complete</p>");
+                      } else {
+                          Serial.print(" >> ");
+                          Serial.println("Invalid value for pin control");
+                          client.println("Invalid value! Use 'on' or 'off'.");
+                      }
 
-                        // HTTP 응답의 내용
-                        client.print("Click <a href=\"/\">here</a> to commands list<br/>");
+                      // HTTP 응답의 내용
+                      client.print("Click <a href=\"/\">here</a> to commands list<br/>");
+                    } else if (request.indexOf("GET /servo") >= 0) {
+                      Serial.print(" >> ");
+                      Serial.println("Servo control");
+
+                      // 1. pin 번호와 value 추출
+                      int angle = request.substring(request.indexOf("angle=") + 6, request.indexOf("&")).toInt();
+                      
+                      Serial.print(" >> ");
+                      Serial.print("angle: ");
+                      Serial.println(angle);
+
+                      // 2. angle 체크
+                      // bool isAvailableAngle = true
+                      // if (isSSID) {
+                      //     // client.print("<p>wifi connect complete</p>");
+                      //     connectToWiFi(client, ssid, password);
+                      // } else {
+                      //     client.print("<p>no wifi name (cannot find ssid)</p>");
+                      // }
+
+                      // 3. LED 컨트롤
+                      if (true) {
+                          myServo.write(angle);
+                          Serial.print(" >> ");
+                          Serial.print("Servo at ");
+                          Serial.print(angle);
+                          Serial.println(" degrees");
+
+                          client.print("<p>Servo move complete</p>");
+                      } else {
+                          Serial.print(" >> ");
+                          Serial.println("Invalid value for pin control");
+                          client.println("Invalid value! Use 'on' or 'off'.");
+                      }
+
+                      // HTTP 응답의 내용
+                      client.print("Click <a href=\"/\">here</a> to commands list<br/>");
                     } else {
-                        // HTTP 응답의 내용
-                        client.print("Click <a href=\"/on\">here</a> to turn ON the LED.<br/>");
-                        client.print("Click <a href=\"/off\">here</a> to turn OFF the LED.<br/>");
-                        client.print("Click <a href=\"/wifi?ssid=MIN_2G&password=4cf18fx940\">here</a> to connect wifi.<br/>");
-                        client.print("Click <a href=\"/pin?pin=8&value=on\">here</a> to trun on the LED.<br/>");
+                      // HTTP 응답의 내용
+                      client.print("Click <a href=\"/on\">here</a> to turn ON the LED.<br/>");
+                      client.print("Click <a href=\"/off\">here</a> to turn OFF the LED.<br/>");
+                      client.print("Click <a href=\"/wifi?ssid=MIN_2G&password=4cf18fx940\">here</a> to connect wifi.<br/>");
+                      client.print("Click <a href=\"/pin?pin=8&value=on\">here</a> to trun on the LED.<br/>");
+                      client.print("Click <a href=\"/servo?angle=90\">here</a> to trun 90 angle servo.<br/>");
                     }
 #pragma endregion
 
