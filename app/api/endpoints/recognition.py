@@ -1,10 +1,8 @@
-from fastapi import APIRouter, WebSocket, UploadFile, File, HTTPException
-from fastapi.responses import JSONResponse, Response
+from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi.responses import Response
 import json
 import wave
-import numpy as np
 from app.core.naver_stt import NaverSTT
-from app.schemas.recognition import RecognitionResponse
 import os
 import tempfile
 from dotenv import load_dotenv
@@ -99,33 +97,4 @@ async def recognize_file(file: UploadFile = File(...)):
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Recognition failed: {str(e)}")
-
-@router.websocket("/stream")
-async def stream_recognition(websocket: WebSocket):
-    """WebSocket을 통한 실시간 음성 스트리밍 인식"""
-    await websocket.accept()
-    stt = get_stt_instance()
-    
-    try:
-        while True:
-            # 클라이언트로부터 오디오 데이터 수신
-            audio_data = await websocket.receive_bytes()
-            
-            try:
-                # Vosk로 음성 인식
-                result = stt.recognize(audio_data)
-                
-                # 결과 전송
-                if result["text"]:
-                    await websocket.send_json(result)
-                    
-            except Exception as e:
-                await websocket.send_json({
-                    "error": str(e),
-                    "text": "",
-                    "confidence": 0.0
-                })
-                
-    except Exception as e:
-        await websocket.close(code=1000, reason=str(e)) 
+        raise HTTPException(status_code=500, detail=f"Recognition failed: {str(e)}") 

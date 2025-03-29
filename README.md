@@ -1,34 +1,22 @@
 # Voice Control AI
 
-음성 인식 서버를 제공하는 프로젝트입니다. 네이버 클라우드 CLOVA Speech Recognition을 사용하여 음성 인식을 지원하며, REST API와 WebSocket을 통해 음성 인식 결과를 제공합니다.
+음성 인식 서버를 제공하는 프로젝트입니다. 네이버 클라우드 CLOVA Speech Recognition을 사용하여 음성 인식을 지원합니다.
 
 ## 주요 기능
 
 - REST API 엔드포인트 제공
-- 실시간 음성 스트리밍 처리
 - 네이버 클라우드 CLOVA Speech Recognition
-- 마이크 장치 관리
-- 서버 설정 관리
+- WAV 파일 기반 음성 인식
 
 ## API 엔드포인트
 
 ### 음성 인식
 - `POST /api/v1/recognition/file`: 음성 파일 업로드 및 인식
-- `WebSocket /api/v1/recognition/stream`: 실시간 음성 스트리밍 인식
-
-### 장치 관리
-- `GET /api/v1/devices/list`: 사용 가능한 오디오 장치 목록 조회
-- `GET /api/v1/devices/default`: 기본 입력 장치 정보 조회
-
-### 설정 관리
-- `GET /api/v1/settings`: 현재 서버 설정 조회
-- `PUT /api/v1/settings`: 서버 설정 업데이트
 
 ## 시스템 요구사항
 
 - Python 3.11 이상
 - macOS
-- 마이크 장치
 - 네이버 클라우드 계정 및 CLOVA Speech Recognition 서비스 활성화
 
 ## 설치 방법
@@ -74,19 +62,6 @@ curl -X POST "http://localhost:8000/api/v1/recognition/file" \
      -F "file=@audio.wav"
 ```
 
-### 실시간 음성 스트리밍
-```python
-import websockets
-import asyncio
-
-async def stream_audio():
-    async with websockets.connect('ws://localhost:8000/api/v1/recognition/stream') as websocket:
-        # 오디오 스트리밍 로직
-        pass
-
-asyncio.get_event_loop().run_until_complete(stream_audio())
-```
-
 ## 개발자 가이드
 
 ### 프로젝트 구조
@@ -95,14 +70,9 @@ voice-control-ai/
 ├── app/
 │   ├── api/
 │   │   ├── endpoints/
-│   │   │   ├── recognition.py
-│   │   │   ├── devices.py
-│   │   │   └── settings.py
+│   │   │   └── recognition.py
 │   │   └── __init__.py
 │   ├── core/
-│   │   ├── config.py
-│   │   └── security.py
-│   ├── models/
 │   │   └── naver_stt.py
 │   └── main.py
 ├── tests/
