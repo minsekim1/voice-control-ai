@@ -1,62 +1,60 @@
 # Voice Control AI
 
-음성 인식 및 제어를 위한 AI 시스템입니다. 온라인과 오프라인 음성 인식을 동시에 지원하며, 실시간 음성 스트리밍 처리가 가능합니다.
+음성 인식 서버를 제공하는 프로젝트입니다. Vosk를 사용하여 오프라인 음성 인식을 지원하며, REST API와 WebSocket을 통해 음성 인식 결과를 제공합니다.
 
 ## 주요 기능
 
 - REST API 엔드포인트 제공
 - 실시간 음성 스트리밍 처리
-- 온라인/오프라인 음성 인식 동시 지원
-- 다중 언어 지원 (한국어, 영어)
-- WebSocket을 통한 실시간 결과 전송
+- 오프라인 음성 인식 (Vosk)
+- 마이크 장치 관리
+- 서버 설정 관리
 
 ## API 엔드포인트
 
-### 음성 인식 API
-- `POST /api/v1/recognize`: 음성 파일 업로드 및 인식
-- `POST /api/v1/stream`: 실시간 음성 스트리밍 처리
-- `GET /api/v1/status`: 서버 상태 확인
+### 음성 인식
+- `POST /api/v1/recognition/file`: 음성 파일 업로드 및 인식
+- `WebSocket /api/v1/recognition/stream`: 실시간 음성 스트리밍 인식
 
-### 설정 API
-- `GET /api/v1/devices`: 사용 가능한 마이크 장치 목록 조회
-- `POST /api/v1/devices`: 마이크 장치 설정 변경
-- `GET /api/v1/languages`: 지원하는 언어 목록 조회
+### 장치 관리
+- `GET /api/v1/devices/list`: 사용 가능한 오디오 장치 목록 조회
+- `GET /api/v1/devices/default`: 기본 입력 장치 정보 조회
+
+### 설정 관리
+- `GET /api/v1/settings`: 현재 서버 설정 조회
+- `PUT /api/v1/settings`: 서버 설정 업데이트
 
 ## 시스템 요구사항
 
-- Python 3.8 이상
-- macOS (테스트 완료)
+- Python 3.11 이상
+- macOS
 - 마이크 장치
-- 인터넷 연결 (온라인 음성 인식용)
+- Vosk 모델 파일 (한국어)
 
 ## 설치 방법
 
-1. 저장소 클론:
+1. 저장소 클론
 ```bash
 git clone https://github.com/minsekim1/voice-control-ai.git
 cd voice-control-ai
-git checkout voice-server
 ```
 
-2. 개발 환경 설정:
+2. 개발 환경 설정
 ```bash
 make setup
 ```
 
-3. 가상 환경 생성 및 패키지 설치:
+3. 패키지 설치
 ```bash
 make install
 ```
 
-4. Vosk 한국어 모델 다운로드:
-- [Vosk 모델 다운로드 페이지](https://alphacephei.com/vosk/models)에서 `vosk-model-small-ko-0.22` 모델을 다운로드
-- 다운로드한 모델을 프로젝트 루트 디렉토리에 `vosk-model-ko` 이름으로 압축 해제
-
-5. Google Cloud Speech-to-Text API 설정:
-- Google Cloud Console에서 프로젝트 생성
-- Speech-to-Text API 활성화
-- 서비스 계정 키 생성 및 다운로드
-- 다운로드한 키 파일을 프로젝트 루트 디렉토리에 `google_credentials.json` 이름으로 저장
+4. Vosk 모델 다운로드
+```bash
+# 한국어 모델 다운로드
+wget https://alphacephei.com/vosk/models/vosk-model-small-ko-0.22.zip
+unzip vosk-model-small-ko-0.22.zip -d model/
+```
 
 ## 서버 실행
 
@@ -64,16 +62,16 @@ make install
 make run
 ```
 
-서버는 기본적으로 `http://localhost:5000`에서 실행됩니다.
+서버는 http://0.0.0.0:8000 에서 실행되며, API 문서는 http://0.0.0.0:8000/docs 에서 확인할 수 있습니다.
 
 ## API 사용 예시
 
-### 음성 파일 업로드 및 인식
+### 음성 파일 업로드
 ```bash
-curl -X POST http://localhost:5000/api/v1/recognize \
-  -H "Content-Type: multipart/form-data" \
-  -F "audio=@audio.wav" \
-  -F "language=ko"
+curl -X POST "http://localhost:8000/api/v1/recognition/file" \
+     -H "accept: application/json" \
+     -H "Content-Type: multipart/form-data" \
+     -F "file=@audio.wav"
 ```
 
 ### 실시간 음성 스트리밍
@@ -82,15 +80,11 @@ import websockets
 import asyncio
 
 async def stream_audio():
-    async with websockets.connect('ws://localhost:5000/api/v1/stream') as websocket:
-        while True:
-            # 오디오 데이터 전송
-            await websocket.send(audio_data)
-            # 인식 결과 수신
-            result = await websocket.recv()
-            print(result)
+    async with websockets.connect('ws://localhost:8000/api/v1/recognition/stream') as websocket:
+        # 오디오 스트리밍 로직
+        pass
 
-asyncio.run(stream_audio())
+asyncio.get_event_loop().run_until_complete(stream_audio())
 ```
 
 ## 개발자 가이드
@@ -98,16 +92,24 @@ asyncio.run(stream_audio())
 ### 프로젝트 구조
 ```
 voice-control-ai/
-├── app.py              # 메인 애플리케이션
-├── api/                # API 엔드포인트
-│   ├── routes.py      # 라우트 정의
-│   └── schemas.py     # 데이터 모델
-├── core/              # 핵심 기능
-│   ├── stt.py        # 온라인 음성 인식
-│   ├── offline_stt.py # 오프라인 음성 인식
-│   └── audio.py      # 오디오 처리
-├── config/           # 설정 파일
-└── tests/            # 테스트 코드
+├── app/
+│   ├── api/
+│   │   ├── endpoints/
+│   │   │   ├── recognition.py
+│   │   │   ├── devices.py
+│   │   │   └── settings.py
+│   │   └── __init__.py
+│   ├── core/
+│   │   ├── config.py
+│   │   └── security.py
+│   ├── models/
+│   │   └── vosk_stt.py
+│   └── main.py
+├── model/
+│   └── vosk-model-small-ko-0.22/
+├── tests/
+├── Makefile
+└── requirements.txt
 ```
 
 ### Makefile 명령어
@@ -117,6 +119,7 @@ voice-control-ai/
 - `make test`: 테스트 실행
 - `make clean`: 캐시 파일 정리
 - `make push`: Git 변경사항 푸시
+- `make backup`: requirements.txt 백업
 
 ## 라이선스
 
@@ -124,12 +127,12 @@ voice-control-ai/
 
 ## 기여하기
 
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+1. 이슈 생성
+2. 브랜치 생성 (`git checkout -b feature/amazing-feature`)
+3. 변경사항 커밋 (`git commit -m 'Add some amazing feature'`)
+4. 브랜치 푸시 (`git push origin feature/amazing-feature`)
+5. Pull Request 생성
 
-## 문의
+## 연락처
 
-문제나 제안사항이 있으시면 [Issues](https://github.com/minsekim1/voice-control-ai/issues) 페이지를 통해 알려주세요.
+문제나 제안사항이 있으시면 이슈를 생성해주세요.
