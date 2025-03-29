@@ -1,4 +1,4 @@
-.PHONY: setup install run test clean push backup
+.PHONY: setup install run test clean push backup check-deps
 
 # Python 가상 환경 설정
 VENV = venv
@@ -26,13 +26,27 @@ install:
 	$(PIP) install -r requirements.txt
 	@echo "패키지 설치가 완료되었습니다."
 
+# 의존성 체크 및 설치
+check-deps:
+	@echo "필요한 패키지 확인 중..."
+	@if [ ! -d "$(VENV)" ]; then \
+		echo "가상 환경이 없습니다. 가상 환경을 생성합니다..."; \
+		make install; \
+	fi
+	@if [ ! -f "requirements.txt" ]; then \
+		echo "requirements.txt 파일이 없습니다. 기본 패키지를 설치합니다..."; \
+		$(PIP) install fastapi uvicorn python-dotenv websockets; \
+	else \
+		$(PIP) install -r requirements.txt; \
+	fi
+
 # 서버 실행
-start:
+start: check-deps
 	@echo "서버 실행 중..."
 	$(PYTHON) run.py
 
 # 테스트 실행
-test:
+test: check-deps
 	@echo "테스트 실행 중..."
 	$(PYTHON) -m pytest tests/ -v -s
 
@@ -70,8 +84,13 @@ help:
 	@echo "사용 가능한 명령어:"
 	@echo "  make setup    - 개발 환경 설정"
 	@echo "  make install  - 패키지 설치"
-	@echo "  make run      - 서버 실행"
+	@echo "  make start    - 서버 실행"
 	@echo "  make test     - 테스트 실행"
 	@echo "  make clean    - 캐시 파일 정리"
 	@echo "  make push     - Git 변경사항 푸시"
-	@echo "  make backup   - requirements.txt 백업" 
+	@echo "  make backup   - requirements.txt 백업"
+
+# 가상 환경 활성화 스크립트
+venv:
+	@echo "가상 환경을 활성화하려면 다음 명령어를 실행하세요:"
+	@echo "source venv/bin/activate"

@@ -1,4 +1,4 @@
-#!/Users/mins/_project/voice-control-ai/venv/bin/python3.11
+#!/Users/mins/_project/voice-control-ai/venv/bin/python3.13
 
 """Deduplicate repeated subtitles."""
 

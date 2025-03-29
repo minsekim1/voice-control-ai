@@ -3,16 +3,26 @@ from fastapi.responses import JSONResponse, Response
 import json
 import wave
 import numpy as np
-from app.core.stt import VoskSTT
+from app.core.naver_stt import NaverSTT
 from app.schemas.recognition import RecognitionResponse
 import os
 import tempfile
+from dotenv import load_dotenv
+
+# 환경 변수 로드
+load_dotenv()
 
 router = APIRouter()
 
 def get_stt_instance():
     """STT 인스턴스를 생성합니다."""
-    return VoskSTT()
+    access_key = os.getenv("NAVER_CLOUD_ACCESS_KEY")
+    secret_key = os.getenv("NAVER_CLOUD_SECRET_KEY")
+    
+    if not access_key or not secret_key:
+        raise ValueError("네이버 클라우드 인증 정보가 설정되지 않았습니다.")
+    
+    return NaverSTT(access_key, secret_key)
 
 def validate_wav_file(file_path):
     """WAV 파일의 형식을 검증합니다."""
