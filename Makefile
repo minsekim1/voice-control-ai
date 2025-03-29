@@ -10,12 +10,8 @@ setup:
 	@echo "개발 환경 설정 중..."
 	brew install git-lfs
 	git lfs install
-	git lfs track "*.model"
-	git lfs track "*.bin"
-	git lfs track "*.fst"
-	git lfs track "*.hmm"
-	git lfs track "*.conf"
-	git lfs track "*.json"
+	git lfs track "*.wav"
+	git lfs track "*.mp3"
 	@echo "개발 환경 설정이 완료되었습니다."
 
 # 패키지 설치
@@ -35,7 +31,7 @@ check-deps:
 	fi
 	@if [ ! -f "requirements.txt" ]; then \
 		echo "requirements.txt 파일이 없습니다. 기본 패키지를 설치합니다..."; \
-		$(PIP) install fastapi uvicorn python-dotenv websockets; \
+		$(PIP) install fastapi uvicorn python-dotenv websockets requests; \
 	else \
 		$(PIP) install -r requirements.txt; \
 	fi

@@ -1,12 +1,12 @@
 # Voice Control AI
 
-음성 인식 서버를 제공하는 프로젝트입니다. Vosk를 사용하여 오프라인 음성 인식을 지원하며, REST API와 WebSocket을 통해 음성 인식 결과를 제공합니다.
+음성 인식 서버를 제공하는 프로젝트입니다. 네이버 클라우드 CLOVA Speech Recognition을 사용하여 음성 인식을 지원하며, REST API와 WebSocket을 통해 음성 인식 결과를 제공합니다.
 
 ## 주요 기능
 
 - REST API 엔드포인트 제공
 - 실시간 음성 스트리밍 처리
-- 오프라인 음성 인식 (Vosk)
+- 네이버 클라우드 CLOVA Speech Recognition
 - 마이크 장치 관리
 - 서버 설정 관리
 
@@ -29,7 +29,7 @@
 - Python 3.11 이상
 - macOS
 - 마이크 장치
-- Vosk 모델 파일 (한국어)
+- 네이버 클라우드 계정 및 CLOVA Speech Recognition 서비스 활성화
 
 ## 설치 방법
 
@@ -49,17 +49,17 @@ make setup
 make install
 ```
 
-4. Vosk 모델 다운로드
-```bash
-# 한국어 모델 다운로드
-wget https://alphacephei.com/vosk/models/vosk-model-small-ko-0.22.zip
-unzip vosk-model-small-ko-0.22.zip -d model/
+4. 환경 변수 설정
+`.env` 파일을 생성하고 다음 내용을 입력합니다:
+```
+NAVER_CLOUD_ACCESS_KEY=your_client_id_here
+NAVER_CLOUD_SECRET_KEY=your_client_secret_here
 ```
 
 ## 서버 실행
 
 ```bash
-make run
+make start
 ```
 
 서버는 http://0.0.0.0:8000 에서 실행되며, API 문서는 http://0.0.0.0:8000/docs 에서 확인할 수 있습니다.
@@ -103,11 +103,11 @@ voice-control-ai/
 │   │   ├── config.py
 │   │   └── security.py
 │   ├── models/
-│   │   └── vosk_stt.py
+│   │   └── naver_stt.py
 │   └── main.py
-├── model/
-│   └── vosk-model-small-ko-0.22/
 ├── tests/
+│   ├── audio/
+│   └── test_naver_stt.py
 ├── Makefile
 └── requirements.txt
 ```
@@ -115,7 +115,7 @@ voice-control-ai/
 ### Makefile 명령어
 - `make setup`: 개발 환경 설정
 - `make install`: 패키지 설치
-- `make run`: 서버 실행
+- `make start`: 서버 실행
 - `make test`: 테스트 실행
 - `make clean`: 캐시 파일 정리
 - `make push`: Git 변경사항 푸시
