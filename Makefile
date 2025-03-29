@@ -27,7 +27,7 @@ install:
 	@echo "패키지 설치가 완료되었습니다."
 
 # 서버 실행
-run:
+start:
 	@echo "서버 실행 중..."
 	$(PYTHON) run.py
 
