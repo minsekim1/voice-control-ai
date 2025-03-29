@@ -24,15 +24,17 @@ def validate_wav_file(file_path):
                 raise ValueError("Audio must be 16-bit")
             if wf.getframerate() not in [16000, 44100, 48000]:
                 raise ValueError("Sample rate must be 16000, 44100, or 48000 Hz")
-            return wf.getframerate()
+            return {
+                "sample_rate": wf.getframerate(),
+                "channels": wf.getnchannels(),
+                "sample_width": wf.getsampwidth()
+            }
     except wave.Error:
         raise ValueError("Invalid WAV file")
 
-@router.post("/file", response_model=RecognitionResponse)
+@router.post("/file")
 async def recognize_file(file: UploadFile = File(...)):
-    """
-    음성 파일을 업로드하여 텍스트로 변환합니다.
-    """
+    """음성 파일을 업로드하여 텍스트로 변환합니다."""
     if not file.filename.lower().endswith('.wav'):
         raise HTTPException(status_code=400, detail="Only WAV files are supported")
     
@@ -44,24 +46,30 @@ async def recognize_file(file: UploadFile = File(...)):
             temp_path = temp_file.name
         
         try:
-            # WAV 파일 검증
-            sample_rate = validate_wav_file(temp_path)
+            # WAV 파일 검증 및 파라미터 추출
+            audio_params = validate_wav_file(temp_path)
             
             # 음성 인식 수행
             with wave.open(temp_path, "rb") as wf:
                 audio_data = wf.readframes(wf.getnframes())
                 stt = get_stt_instance()
-                result = stt.recognize(audio_data, sample_rate=sample_rate)
+                result = stt.recognize(
+                    audio_data,
+                    sample_rate=audio_params["sample_rate"],
+                    channels=audio_params["channels"],
+                    sample_width=audio_params["sample_width"]
+                )
                 
                 if not result["text"]:
                     return JSONResponse(
                         status_code=204,
-                        content={"message": "No speech detected"}
+                        content=None,
+                        headers={"Content-Length": "0"}
                     )
                 
-                return RecognitionResponse(
-                    text=result["text"],
-                    confidence=result.get("confidence", 0.0)
+                return JSONResponse(
+                    content=result,
+                    headers={"Content-Type": "application/json"}
                 )
                 
         finally:
@@ -75,9 +83,7 @@ async def recognize_file(file: UploadFile = File(...)):
 
 @router.websocket("/stream")
 async def stream_recognition(websocket: WebSocket):
-    """
-    WebSocket을 통한 실시간 음성 스트리밍 인식
-    """
+    """WebSocket을 통한 실시간 음성 스트리밍 인식"""
     await websocket.accept()
     stt = get_stt_instance()
     

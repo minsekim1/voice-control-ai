@@ -34,7 +34,7 @@ start:
 # 테스트 실행
 test:
 	@echo "테스트 실행 중..."
-	$(PYTHON) -m pytest tests/
+	$(PYTHON) -m pytest tests/ -v -s
 
 # 캐시 파일 정리
 clean:
