@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api import router as api_router
+from app.api.endpoints import recognition
 
 app = FastAPI(
     title="Voice Control AI",
@@ -11,7 +12,7 @@ app = FastAPI(
 # CORS 설정
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # 실제 배포 시에는 특정 도메인만 허용하도록 수정
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -19,6 +20,7 @@ app.add_middleware(
 
 # API 라우터 등록
 app.include_router(api_router, prefix="/api/v1")
+app.include_router(recognition.router, prefix="/api/v1/recognition", tags=["recognition"])
 
 @app.get("/")
 async def root():
