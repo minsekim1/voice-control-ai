@@ -29,7 +29,7 @@ install:
 # 서버 실행
 run:
 	@echo "서버 실행 중..."
-	$(PYTHON) app.py
+	$(PYTHON) run.py
 
 # 테스트 실행
 test:
