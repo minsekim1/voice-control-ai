@@ -1,5 +1,5 @@
 from fastapi import APIRouter, WebSocket, UploadFile, File, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 import json
 import wave
 import numpy as np
@@ -61,15 +61,25 @@ async def recognize_file(file: UploadFile = File(...)):
                 )
                 
                 if not result["text"]:
-                    return JSONResponse(
+                    return Response(
                         status_code=204,
                         content=None,
-                        headers={"Content-Length": "0"}
+                        headers={
+                            "Content-Length": "0",
+                            "Content-Type": "application/json"
+                        }
                     )
                 
-                return JSONResponse(
-                    content=result,
-                    headers={"Content-Type": "application/json"}
+                # JSON 문자열로 변환
+                json_str = json.dumps(result)
+                
+                return Response(
+                    content=json_str,
+                    media_type="application/json",
+                    headers={
+                        "Content-Length": str(len(json_str)),
+                        "Content-Type": "application/json"
+                    }
                 )
                 
         finally:

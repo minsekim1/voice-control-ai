@@ -1,36 +1,24 @@
+import os
 import json
 import wave
 import numpy as np
-from vosk import Model, KaldiRecognizer
-import os
-import io
-import librosa
+from ncloud.speech import SpeechClient
+from ncloud.speech.model import RecognitionRequest
+from ncloud.speech.model import RecognitionResponse
+from ncloud.speech.model import RecognitionConfig
+from ncloud.speech.model import RecognitionAudio
+import base64
 
-class VoskSTT:
-    _model = None
-    _instance = None
-    
-    def __new__(cls, model_path="model/vosk-model-small-ko-0.22"):
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
-    
-    def __init__(self, model_path="model/vosk-model-small-ko-0.22"):
+class NaverSTT:
+    def __init__(self, access_key: str, secret_key: str):
         """
-        Vosk STT 초기화
+        네이버 클라우드 STT 초기화
+        
+        Args:
+            access_key: 네이버 클라우드 액세스 키
+            secret_key: 네이버 클라우드 시크릿 키
         """
-        if not os.path.exists(model_path):
-            raise FileNotFoundError(f"Model not found at {model_path}")
-        
-        if self._model is None:
-            self._model = Model(model_path)
-        
-        self.reset()
-        
-    def reset(self):
-        """인식기 상태를 초기화합니다."""
-        self.recognizer = KaldiRecognizer(self._model, 16000)
-        self.recognizer.SetWords(True)
+        self.client = SpeechClient(access_key, secret_key)
         
     def process_audio_data(self, audio_data, sample_rate=16000):
         """오디오 데이터를 적절한 형식으로 변환합니다."""
@@ -61,17 +49,6 @@ class VoskSTT:
                         target_sr=16000
                     ).astype(np.int16)
                 
-                # 무음 제거 및 음성 강화
-                threshold = 50  # 임계값 낮춤
-                audio_array = np.where(np.abs(audio_array) > threshold, audio_array, 0)
-                
-                # 음성 시작/끝 부분 자동 조정
-                non_zero = np.nonzero(audio_array)[0]
-                if len(non_zero) > 0:
-                    start = max(0, non_zero[0] - 1000)  # 시작 부분 여유
-                    end = min(len(audio_array), non_zero[-1] + 1000)  # 끝 부분 여유
-                    audio_array = audio_array[start:end]
-                
                 return audio_array.tobytes()
             
             return audio_data
@@ -93,30 +70,62 @@ class VoskSTT:
             # 오디오 데이터 전처리
             processed_audio = self.process_audio_data(audio_data, sample_rate)
             
-            # 인식기 재설정 (새로운 파라미터로)
-            self.recognizer = KaldiRecognizer(self._model, sample_rate)
-            self.recognizer.SetWords(True)
+            # 오디오 데이터를 base64로 인코딩
+            audio_base64 = base64.b64encode(processed_audio).decode('utf-8')
+            
+            # 인식 설정
+            config = RecognitionConfig(
+                encoding="LINEAR16",  # 16-bit PCM
+                sample_rate_hertz=sample_rate,
+                language_code="ko-KR",
+                enable_automatic_punctuation=True,
+                enable_word_time_offsets=True
+            )
+            
+            # 오디오 데이터 설정
+            audio = RecognitionAudio(
+                content=audio_base64
+            )
+            
+            # 인식 요청
+            request = RecognitionRequest(
+                config=config,
+                audio=audio
+            )
             
             # 인식 수행
-            if self.recognizer.AcceptWaveform(processed_audio):
-                result = json.loads(self.recognizer.Result())
-            else:
-                result = json.loads(self.recognizer.PartialResult())
+            response = self.client.recognize(request)
             
-            # 신뢰도 점수 계산
-            confidence = 0.0
-            if "result" in result:
-                # 각 단어의 신뢰도 점수 평균 계산
-                confidences = [word.get("conf", 0.0) for word in result["result"]]
-                if confidences:
-                    confidence = sum(confidences) / len(confidences)
-            
-            # 인식기 초기화
-            self.reset()
+            # 결과 처리
+            if response and response.results:
+                result = response.results[0]
+                alternatives = result.alternatives
+                if alternatives:
+                    best_alternative = alternatives[0]
+                    confidence = best_alternative.confidence
+                    
+                    # 단어별 신뢰도 점수 계산
+                    word_confidences = []
+                    for word in best_alternative.words:
+                        if hasattr(word, 'confidence'):
+                            word_confidences.append(word.confidence)
+                    
+                    if word_confidences:
+                        confidence = sum(word_confidences) / len(word_confidences)
+                    
+                    return {
+                        "text": best_alternative.transcript,
+                        "confidence": confidence,
+                        "params": {
+                            "sample_rate": sample_rate,
+                            "channels": channels,
+                            "sample_width": sample_width
+                        }
+                    }
             
             return {
-                "text": result.get("text", ""),
-                "confidence": confidence,
+                "text": "",
+                "confidence": 0.0,
                 "params": {
                     "sample_rate": sample_rate,
                     "channels": channels,
@@ -125,5 +134,4 @@ class VoskSTT:
             }
             
         except Exception as e:
-            self.reset()  # 오류 발생 시에도 초기화
             raise Exception(f"Recognition failed: {str(e)}") 
