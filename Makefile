@@ -1,4 +1,4 @@
-.PHONY: setup install run test clean push backup check-deps
+.PHONY: setup install run test clean push backup check-deps venv
 
 # Python 가상 환경 설정
 VENV = venv
@@ -25,6 +25,11 @@ install:
 # 의존성 체크 및 설치
 check-deps:
 	@echo "필요한 패키지 확인 중..."
+	@if [ -z "$$VIRTUAL_ENV" ]; then \
+		echo "가상 환경이 활성화되지 않았습니다. 다음 명령어로 활성화해주세요:"; \
+		echo "source venv/bin/activate"; \
+		exit 1; \
+	fi
 	@if [ ! -d "$(VENV)" ]; then \
 		echo "가상 환경이 없습니다. 가상 환경을 생성합니다..."; \
 		make install; \
@@ -85,8 +90,3 @@ help:
 	@echo "  make clean    - 캐시 파일 정리"
 	@echo "  make push     - Git 변경사항 푸시"
 	@echo "  make backup   - requirements.txt 백업"
-
-# 가상 환경 활성화 스크립트
-venv:
-	@echo "가상 환경을 활성화하려면 다음 명령어를 실행하세요:"
-	@echo "source venv/bin/activate"
