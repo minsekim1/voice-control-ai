@@ -13,4 +13,4 @@ python-dotenv==1.0.1
 gTTS==2.5.1
 pydub==0.25.1
 edge-tts==6.1.9
-ncloud-sdk==1.1.9 
+requests==2.31.0 
