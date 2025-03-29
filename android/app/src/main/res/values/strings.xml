@@ -1,9 +1,0 @@
-<resources>
-    <string name="app_name">IOT 리모컨</string>
-    <string name="select_option_prompt">Select an option</string>
-    <string-array name="options_array">
-        <item>All LED</item>
-        <item>Specific LED</item>
-        <item>Motor</item>
-    </string-array>
-</resources>
