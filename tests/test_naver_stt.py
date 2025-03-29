@@ -67,7 +67,8 @@ async def generate_test_audio(text: str, filename: str, output_dir: str = "tests
         if os.path.exists(temp_mp3):
             os.remove(temp_mp3)
 
-def test_naver_stt():
+@pytest.mark.asyncio
+async def test_naver_stt():
     """네이버 클라우드 STT API 테스트"""
     # 인증 정보 확인
     client_id = os.getenv("NAVER_CLOUD_ACCESS_KEY")
@@ -91,7 +92,7 @@ def test_naver_stt():
         print(f"\n{Colors.CYAN}{Colors.BOLD}{i}번 테스트 진행 중...{Colors.END}")
         
         # 1. 음성 파일 생성
-        filepath = asyncio.run(generate_test_audio(text, f"test_{i}.wav"))
+        filepath = await generate_test_audio(text, f"test_{i}.wav")
         print(f"{Colors.BLUE}생성된 파일: {filepath}{Colors.END}")
         
         # 2. STT 테스트

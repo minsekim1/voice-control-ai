@@ -2,7 +2,7 @@
 
 # Python 가상 환경 설정
 VENV = venv
-PYTHON = $(VENV)/bin/python3
+PYTHON = $(VENV)/bin/python3.11
 PIP = $(VENV)/bin/pip
 
 # 기본 설정
@@ -17,7 +17,7 @@ setup:
 # 패키지 설치
 install:
 	@echo "가상 환경 생성 및 패키지 설치 중..."
-	python3 -m venv $(VENV)
+	python3.11 -m venv $(VENV)
 	$(PIP) install --upgrade pip
 	$(PIP) install -r requirements.txt
 	@echo "패키지 설치가 완료되었습니다."
@@ -48,10 +48,9 @@ start: check-deps
 
 # 테스트 실행
 test: check-deps
-	@echo "테스트 오디오 파일 생성 중..."
-	PYTHONPATH=$$PYTHONPATH:. $(PYTHON) tests/test_naver_stt.py
-	@echo "테스트 실행 중..."
-	$(PYTHON) -m pytest tests/ -v -s
+	@echo "=== 음성 인식 테스트 시작 ==="
+	PYTHONPATH=$$PYTHONPATH:. $(PYTHON) -m pytest tests/ -v -s
+	@echo "=== 테스트 완료 ==="
 
 # 캐시 파일 정리
 clean:

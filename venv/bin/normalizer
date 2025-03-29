@@ -1,4 +1,4 @@
-#!/Users/mins/_project/voice-control-ai/venv/bin/python3.13
+#!/Users/mins/_project/voice-control-ai/venv/bin/python3.11
 # -*- coding: utf-8 -*-
 import re
 import sys
