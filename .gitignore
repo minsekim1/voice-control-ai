@@ -2,6 +2,10 @@
 .env
 .env.*
 
+# 테스트 오디오
+tests/audio/
+
+
 # Python
 __pycache__/
 *.py[cod]

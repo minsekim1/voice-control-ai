@@ -48,6 +48,8 @@ start: check-deps
 
 # 테스트 실행
 test: check-deps
+	@echo "테스트 오디오 파일 생성 중..."
+	PYTHONPATH=$$PYTHONPATH:. $(PYTHON) tests/generate_test_audio.py
 	@echo "테스트 실행 중..."
 	$(PYTHON) -m pytest tests/ -v -s
 
