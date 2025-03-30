@@ -2,7 +2,7 @@ package com.minsekim.voicecontrol
 
 import android.Manifest
 import android.content.pm.PackageManager
-import android.media.MediaRecorder
+import android.media.*
 import android.os.Bundle
 import android.os.Environment
 import android.util.Log
@@ -32,7 +32,9 @@ import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.File
+import java.io.FileOutputStream
 import java.io.IOException
+import java.nio.ByteBuffer
 
 class MainActivity : ComponentActivity() {
     private var mediaRecorder: MediaRecorder? = null
@@ -97,13 +99,15 @@ class MainActivity : ComponentActivity() {
             }
 
             val outputDir = getExternalFilesDir(Environment.DIRECTORY_MUSIC)
-            audioFile = File.createTempFile("audio_", ".m4a", outputDir)
+            audioFile = File.createTempFile("audio_", ".wav", outputDir)
 
             mediaRecorder = MediaRecorder().apply {
                 setAudioSource(MediaRecorder.AudioSource.MIC)
                 setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
                 setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
                 setOutputFile(audioFile?.absolutePath)
+                setAudioSamplingRate(16000)
+                setAudioChannels(1)
                 prepare()
                 start()
             }
@@ -144,6 +148,65 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private fun convertM4aToWav(inputFile: File): File {
+        val outputFile = File(inputFile.parent, inputFile.nameWithoutExtension + ".wav")
+        val mediaExtractor = MediaExtractor()
+        val mediaMuxer = MediaMuxer(outputFile.absolutePath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
+        
+        try {
+            mediaExtractor.setDataSource(inputFile.absolutePath)
+            
+            // 오디오 트랙 찾기
+            var audioTrackIndex = -1
+            for (i in 0 until mediaExtractor.trackCount) {
+                val format = mediaExtractor.getTrackFormat(i)
+                val mime = format.getString(MediaFormat.KEY_MIME)
+                if (mime?.startsWith("audio/") == true) {
+                    audioTrackIndex = i
+                    break
+                }
+            }
+            
+            if (audioTrackIndex == -1) {
+                throw IOException("오디오 트랙을 찾을 수 없음")
+            }
+            
+            // 트랙 선택
+            mediaExtractor.selectTrack(audioTrackIndex)
+            
+            // 트랙 추가
+            val format = mediaExtractor.getTrackFormat(audioTrackIndex)
+            val trackIndex = mediaMuxer.addTrack(format)
+            mediaMuxer.start()
+            
+            // 데이터 복사
+            val buffer = ByteBuffer.allocate(1024 * 1024)
+            val bufferInfo = MediaCodec.BufferInfo()
+            
+            while (true) {
+                val sampleSize = mediaExtractor.readSampleData(buffer, 0)
+                if (sampleSize < 0) break
+                
+                bufferInfo.offset = 0
+                bufferInfo.size = sampleSize
+                bufferInfo.presentationTimeUs = mediaExtractor.sampleTime
+                bufferInfo.flags = mediaExtractor.sampleFlags
+                
+                mediaMuxer.writeSampleData(trackIndex, buffer, bufferInfo)
+                mediaExtractor.advance()
+            }
+            
+            return outputFile
+        } catch (e: Exception) {
+            Log.e("MainActivity", "오디오 변환 실패", e)
+            throw e
+        } finally {
+            mediaMuxer.stop()
+            mediaMuxer.release()
+            mediaExtractor.release()
+        }
+    }
+
     private fun sendAudioToServer(file: File) {
         if (serverIp.isEmpty()) {
             Log.e("MainActivity", "서버 IP가 설정되지 않음")
@@ -151,18 +214,24 @@ class MainActivity : ComponentActivity() {
             return
         }
 
+        if (!file.exists()) {
+            Log.e("MainActivity", "녹음 파일이 존재하지 않음")
+            showToast("녹음 파일이 없습니다")
+            return
+        }
+
         val client = OkHttpClient()
         val requestBody = MultipartBody.Builder()
             .setType(MultipartBody.FORM)
             .addFormDataPart(
-                "audio",
-                "audio.m4a",
-                file.asRequestBody("audio/m4a".toMediaType())
+                "file",
+                "audio.wav",
+                file.asRequestBody("audio/wav".toMediaType())
             )
             .build()
 
         val request = Request.Builder()
-            .url("http://$serverIp:3000/upload")
+            .url("http://$serverIp:8000/api/recognition/file")
             .post(requestBody)
             .build()
 
@@ -178,7 +247,20 @@ class MainActivity : ComponentActivity() {
                 val responseBody = response.body?.string()
                 Log.d("MainActivity", "서버 전송 성공: $responseBody")
                 runOnUiThread {
-                    serverResponse = responseBody ?: "응답 없음"
+                    if (response.code == 204) {
+                        serverResponse = "음성이 인식되지 않았습니다."
+                    } else {
+                        try {
+                            // JSON 응답 파싱
+                            val jsonResponse = responseBody?.let { 
+                                org.json.JSONObject(it)
+                            }
+                            serverResponse = jsonResponse?.getString("text") ?: "응답 없음"
+                        } catch (e: Exception) {
+                            Log.e("MainActivity", "응답 파싱 실패", e)
+                            serverResponse = "응답 파싱 실패"
+                        }
+                    }
                 }
             }
         })

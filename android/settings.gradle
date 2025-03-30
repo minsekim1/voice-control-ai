@@ -16,8 +16,9 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        maven { url 'https://jitpack.io' }
     }
 }
 
-rootProject.name = "Voicecontrol"
+rootProject.name = "voice-control-ai"
 include ':app'
