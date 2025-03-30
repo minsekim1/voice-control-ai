@@ -1,41 +1,81 @@
-# Voice Control AI
+# Voice Control AI - Android Test App
 
-음성 인식 기반의 AI 제어 시스템입니다. 온라인과 오프라인 음성 인식을 동시에 지원하며, 인식된 음성 명령어를 실행합니다.
+음성 인식 서버를 테스트하기 위한 안드로이드 앱입니다. 네이버 클라우드 CLOVA Speech Recognition 서버에 음성 데이터를 전송하여 테스트합니다.
 
-## 브랜치 구조
+## 주요 기능
 
-### main
-- 프로젝트의 기본 문서화 파일만 포함
-- `README.md`: 프로젝트 설명 및 사용 방법
-- `LICENSE`: MIT 라이선스
-
-### voice-server
-- 음성 인식 서버 구현
-- 네이버 클라우드 CLOVA Speech Recognition 서버 제공
-- REST API 및 WebSocket 엔드포인트 제공
-- 실시간 음성 스트리밍 처리
-
-서버 실행 및 상세 기능을 확인하려면 voice-server 브랜치로 전환하세요:
-```bash
-git checkout voice-server
-```
+- 음성 녹음 및 WAV 파일 변환
+- 서버로 음성 파일 업로드
+- 인식 결과 표시
 
 ## 시스템 요구사항
 
-- Python 3.8 이상
-- macOS (테스트 완료)
-- 마이크 장치
-- 인터넷 연결 (온라인 음성 인식용)
+- Android Studio Hedgehog | 2023.1.1
+- Android SDK 34 (Android 14.0)
+- Kotlin 1.9.0
+- 네이버 클라우드 CLOVA Speech Recognition 서버 (http://localhost:8000)
 
 ## 설치 방법
 
-1. 저장소 클론:
+1. 저장소 클론
 ```bash
 git clone https://github.com/minsekim1/voice-control-ai.git
 cd voice-control-ai
 ```
 
+2. Android Studio에서 프로젝트 열기
+- `android` 디렉토리를 Android Studio에서 열기
+
+3. 환경 변수 설정
+`local.properties` 파일에 서버 URL을 설정합니다:
+```
+SERVER_URL=http://localhost:8000
+```
+
+## 앱 실행
+
+1. Android Studio에서 앱 실행
+2. 녹음 버튼을 눌러 음성 녹음 시작
+3. 녹음 종료 후 자동으로 서버로 전송
+4. 인식 결과 확인
+
+## API 엔드포인트
+
+### 음성 인식
+- `POST /api/v1/recognition/file`: 음성 파일 업로드 및 인식
+
 ## 개발자 가이드
+
+### 프로젝트 구조
+```
+android/
+├── app/
+│   ├── src/
+│   │   ├── main/
+│   │   │   ├── java/com/example/voicecontrol/
+│   │   │   │   ├── MainActivity.kt
+│   │   │   │   ├── api/
+│   │   │   │   │   ├── ApiService.kt
+│   │   │   │   │   └── RetrofitClient.kt
+│   │   │   │   ├── model/
+│   │   │   │   │   └── RecognitionResponse.kt
+│   │   │   │   └── utils/
+│   │   │   │       └── AudioRecorder.kt
+│   │   │   └── res/
+│   │   │       ├── layout/
+│   │   │       │   └── activity_main.xml
+│   │   │       └── values/
+│   │   │           └── strings.xml
+│   │   └── test/
+│   └── build.gradle
+└── build.gradle
+```
+
+### Makefile 명령어
+- `make build`: 앱 빌드
+- `make install`: 앱 설치
+- `make clean`: 빌드 파일 정리
+- `make push`: Git 변경사항 푸시
 
 ## 라이선스
 
