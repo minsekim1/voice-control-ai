@@ -34,6 +34,7 @@ import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.File
 import java.io.IOException
 import androidx.core.content.edit
+import java.nio.ByteBuffer
 
 class MainActivity : ComponentActivity() {
     private var mediaRecorder: MediaRecorder? = null
@@ -111,15 +112,16 @@ class MainActivity : ComponentActivity() {
             }
 
             val outputDir = getExternalFilesDir(Environment.DIRECTORY_MUSIC)
-            audioFile = File.createTempFile("audio_", ".wav", outputDir)
+            audioFile = File.createTempFile("audio_", ".3gp", outputDir)
 
             mediaRecorder = MediaRecorder().apply {
                 setAudioSource(MediaRecorder.AudioSource.MIC)
-                setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
-                setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
+                setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP)
+                setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB)
                 setOutputFile(audioFile?.absolutePath)
                 setAudioSamplingRate(16000)
                 setAudioChannels(1)
+                setAudioEncodingBitRate(128 * 1024)
                 prepare()
                 start()
             }
@@ -146,6 +148,7 @@ class MainActivity : ComponentActivity() {
             // 녹음된 파일을 서버로 전송
             audioFile?.let { file ->
                 if (file.exists() && file.length() > 0) {
+                    Log.d("MainActivity", "녹음 파일: ${file.absolutePath}")
                     sendAudioToServer(file)
                 } else {
                     Log.e("MainActivity", "녹음 파일이 없거나 비어있음")
@@ -157,6 +160,77 @@ class MainActivity : ComponentActivity() {
             showToast("녹음 중지 실패")
         } finally {
             mediaRecorder = null
+        }
+    }
+
+    private fun convertToWav(inputFile: File): File {
+        val outputFile = File(inputFile.parent, inputFile.nameWithoutExtension + ".wav")
+        val mediaExtractor = MediaExtractor()
+        val mediaMuxer = MediaMuxer(outputFile.absolutePath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
+        
+        try {
+            mediaExtractor.setDataSource(inputFile.absolutePath)
+            
+            // 오디오 트랙 찾기
+            var audioTrackIndex = -1
+            for (i in 0 until mediaExtractor.trackCount) {
+                val format = mediaExtractor.getTrackFormat(i)
+                val mime = format.getString(MediaFormat.KEY_MIME)
+                if (mime?.startsWith("audio/") == true) {
+                    audioTrackIndex = i
+                    break
+                }
+            }
+            
+            if (audioTrackIndex == -1) {
+                throw IOException("오디오 트랙을 찾을 수 없음")
+            }
+            
+            // 트랙 선택
+            mediaExtractor.selectTrack(audioTrackIndex)
+            
+            // 트랙 추가
+            val format = mediaExtractor.getTrackFormat(audioTrackIndex)
+            val trackIndex = mediaMuxer.addTrack(format)
+            
+            // 데이터 복사
+            val buffer = ByteBuffer.allocate(1024 * 1024)
+            val bufferInfo = MediaCodec.BufferInfo()
+            
+            // MediaMuxer 시작
+            mediaMuxer.start()
+            
+            while (true) {
+                val sampleSize = mediaExtractor.readSampleData(buffer, 0)
+                if (sampleSize < 0) break
+                
+                bufferInfo.offset = 0
+                bufferInfo.size = sampleSize
+                bufferInfo.presentationTimeUs = mediaExtractor.sampleTime
+                bufferInfo.flags = MediaCodec.BUFFER_FLAG_SYNC_FRAME
+                
+                mediaMuxer.writeSampleData(trackIndex, buffer, bufferInfo)
+                mediaExtractor.advance()
+            }
+            
+            // MediaMuxer 정리
+            try {
+                mediaMuxer.stop()
+            } catch (e: IllegalStateException) {
+                Log.e("MainActivity", "MediaMuxer stop 실패", e)
+            }
+            
+            return outputFile
+        } catch (e: Exception) {
+            Log.e("MainActivity", "오디오 변환 실패", e)
+            throw e
+        } finally {
+            try {
+                mediaMuxer.release()
+                mediaExtractor.release()
+            } catch (e: Exception) {
+                Log.e("MainActivity", "리소스 해제 실패", e)
+            }
         }
     }
 
@@ -178,13 +252,13 @@ class MainActivity : ComponentActivity() {
             .setType(MultipartBody.FORM)
             .addFormDataPart(
                 "file",
-                "audio.wav",
-                file.asRequestBody("audio/wav".toMediaType())
+                "audio.3gp",
+                file.asRequestBody("audio/3gpp".toMediaType())
             )
             .build()
 
         val request = Request.Builder()
-            .url("http://$serverIp:8000/api/recognition/file")
+            .url("http://$serverIp:8000/api/recognition/file/android/3gp")
             .post(requestBody)
             .build()
 
