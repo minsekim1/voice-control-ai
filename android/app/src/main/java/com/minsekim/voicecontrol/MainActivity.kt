@@ -1,6 +1,8 @@
 package com.minsekim.voicecontrol
 
 import android.Manifest
+import android.content.Context
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.media.*
 import android.os.Bundle
@@ -21,8 +23,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -32,15 +32,15 @@ import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.File
-import java.io.FileOutputStream
 import java.io.IOException
-import java.nio.ByteBuffer
+import androidx.core.content.edit
 
 class MainActivity : ComponentActivity() {
     private var mediaRecorder: MediaRecorder? = null
     private var audioFile: File? = null
     private var serverIp: String = ""
     private var serverResponse: String = ""
+    private lateinit var sharedPreferences: SharedPreferences
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -54,6 +54,10 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         
+        // SharedPreferences 초기화
+        sharedPreferences = getSharedPreferences("VoiceControlPrefs", Context.MODE_PRIVATE)
+        serverIp = sharedPreferences.getString("server_ip", "") ?: ""
+        
         // 필요한 권한 요청
         requestPermissions()
 
@@ -66,12 +70,20 @@ class MainActivity : ComponentActivity() {
                     MainScreen(
                         onStartRecording = { startRecording() },
                         onStopRecording = { stopRecording() },
-                        onServerIpSet = { ip -> serverIp = ip },
-                        serverResponse = serverResponse
+                        onServerIpSet = { ip -> 
+                            serverIp = ip
+                            saveServerIp(ip)
+                        },
+                        serverResponse = serverResponse,
+                        savedServerIp = serverIp
                     )
                 }
             }
         }
+    }
+
+    private fun saveServerIp(ip: String) {
+        sharedPreferences.edit() { putString("server_ip", ip) }
     }
 
     private fun showToast(message: String) {
@@ -148,65 +160,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun convertM4aToWav(inputFile: File): File {
-        val outputFile = File(inputFile.parent, inputFile.nameWithoutExtension + ".wav")
-        val mediaExtractor = MediaExtractor()
-        val mediaMuxer = MediaMuxer(outputFile.absolutePath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
-        
-        try {
-            mediaExtractor.setDataSource(inputFile.absolutePath)
-            
-            // 오디오 트랙 찾기
-            var audioTrackIndex = -1
-            for (i in 0 until mediaExtractor.trackCount) {
-                val format = mediaExtractor.getTrackFormat(i)
-                val mime = format.getString(MediaFormat.KEY_MIME)
-                if (mime?.startsWith("audio/") == true) {
-                    audioTrackIndex = i
-                    break
-                }
-            }
-            
-            if (audioTrackIndex == -1) {
-                throw IOException("오디오 트랙을 찾을 수 없음")
-            }
-            
-            // 트랙 선택
-            mediaExtractor.selectTrack(audioTrackIndex)
-            
-            // 트랙 추가
-            val format = mediaExtractor.getTrackFormat(audioTrackIndex)
-            val trackIndex = mediaMuxer.addTrack(format)
-            mediaMuxer.start()
-            
-            // 데이터 복사
-            val buffer = ByteBuffer.allocate(1024 * 1024)
-            val bufferInfo = MediaCodec.BufferInfo()
-            
-            while (true) {
-                val sampleSize = mediaExtractor.readSampleData(buffer, 0)
-                if (sampleSize < 0) break
-                
-                bufferInfo.offset = 0
-                bufferInfo.size = sampleSize
-                bufferInfo.presentationTimeUs = mediaExtractor.sampleTime
-                bufferInfo.flags = mediaExtractor.sampleFlags
-                
-                mediaMuxer.writeSampleData(trackIndex, buffer, bufferInfo)
-                mediaExtractor.advance()
-            }
-            
-            return outputFile
-        } catch (e: Exception) {
-            Log.e("MainActivity", "오디오 변환 실패", e)
-            throw e
-        } finally {
-            mediaMuxer.stop()
-            mediaMuxer.release()
-            mediaExtractor.release()
-        }
-    }
-
     private fun sendAudioToServer(file: File) {
         if (serverIp.isEmpty()) {
             Log.e("MainActivity", "서버 IP가 설정되지 않음")
@@ -278,10 +231,11 @@ fun MainScreen(
     onStartRecording: () -> Unit,
     onStopRecording: () -> Unit,
     onServerIpSet: (String) -> Unit,
-    serverResponse: String
+    serverResponse: String,
+    savedServerIp: String
 ) {
     var showServerIpDialog by remember { mutableStateOf(false) }
-    var serverIp by remember { mutableStateOf("") }
+    var serverIp by remember { mutableStateOf(savedServerIp) }
     var isRecording by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -300,7 +254,7 @@ fun MainScreen(
                 onClick = { showServerIpDialog = true },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("서버 IP 입력하기")
+                Text(if (serverIp.isEmpty()) "서버 IP 입력하기" else "서버 IP: $serverIp")
             }
 
             Button(
