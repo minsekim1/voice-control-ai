@@ -6,6 +6,7 @@ import android.media.MediaRecorder
 import android.os.Bundle
 import android.os.Environment
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -23,6 +24,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.minsekim.voicecontrol.ui.theme.VoicecontrolTheme
@@ -36,6 +38,7 @@ class MainActivity : ComponentActivity() {
     private var mediaRecorder: MediaRecorder? = null
     private var audioFile: File? = null
     private var serverIp: String = ""
+    private var serverResponse: String = ""
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -61,11 +64,16 @@ class MainActivity : ComponentActivity() {
                     MainScreen(
                         onStartRecording = { startRecording() },
                         onStopRecording = { stopRecording() },
-                        onServerIpSet = { ip -> serverIp = ip }
+                        onServerIpSet = { ip -> serverIp = ip },
+                        serverResponse = serverResponse
                     )
                 }
             }
         }
+    }
+
+    private fun showToast(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 
     private fun requestPermissions() {
@@ -101,6 +109,7 @@ class MainActivity : ComponentActivity() {
             }
         } catch (e: IOException) {
             Log.e("MainActivity", "녹음 시작 실패", e)
+            showToast("녹음 시작 실패")
             stopRecording()
         }
     }
@@ -112,6 +121,7 @@ class MainActivity : ComponentActivity() {
                     stop()
                 } catch (e: IllegalStateException) {
                     Log.e("MainActivity", "녹음 중지 실패: 녹음 중이 아님", e)
+                    showToast("녹음 중지 실패")
                 }
                 release()
             }
@@ -123,10 +133,12 @@ class MainActivity : ComponentActivity() {
                     sendAudioToServer(file)
                 } else {
                     Log.e("MainActivity", "녹음 파일이 없거나 비어있음")
+                    showToast("녹음 파일이 없거나 비어있음")
                 }
             }
         } catch (e: Exception) {
             Log.e("MainActivity", "녹음 중지 실패", e)
+            showToast("녹음 중지 실패")
         } finally {
             mediaRecorder = null
         }
@@ -135,6 +147,7 @@ class MainActivity : ComponentActivity() {
     private fun sendAudioToServer(file: File) {
         if (serverIp.isEmpty()) {
             Log.e("MainActivity", "서버 IP가 설정되지 않음")
+            showToast("서버 IP를 먼저 설정해주세요")
             return
         }
 
@@ -156,10 +169,17 @@ class MainActivity : ComponentActivity() {
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 Log.e("MainActivity", "서버 전송 실패", e)
+                runOnUiThread {
+                    showToast("서버 전송 실패")
+                }
             }
 
             override fun onResponse(call: Call, response: Response) {
-                Log.d("MainActivity", "서버 전송 성공: ${response.body?.string()}")
+                val responseBody = response.body?.string()
+                Log.d("MainActivity", "서버 전송 성공: $responseBody")
+                runOnUiThread {
+                    serverResponse = responseBody ?: "응답 없음"
+                }
             }
         })
     }
@@ -175,7 +195,8 @@ class MainActivity : ComponentActivity() {
 fun MainScreen(
     onStartRecording: () -> Unit,
     onStopRecording: () -> Unit,
-    onServerIpSet: (String) -> Unit
+    onServerIpSet: (String) -> Unit,
+    serverResponse: String
 ) {
     var showServerIpDialog by remember { mutableStateOf(false) }
     var serverIp by remember { mutableStateOf("") }
@@ -238,7 +259,14 @@ fun MainScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = serverResponse,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.bodyLarge
+            )
         }
 
         if (showServerIpDialog) {
