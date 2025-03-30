@@ -2,7 +2,7 @@
 
 # Python 가상 환경 설정
 VENV = venv
-PYTHON = $(VENV)/bin/python3.11
+PYTHON = $(VENV)/bin/python3
 PIP = $(VENV)/bin/pip
 
 # 기본 설정
@@ -17,7 +17,7 @@ setup:
 # 패키지 설치
 install:
 	@echo "가상 환경 생성 및 패키지 설치 중..."
-	python3.11 -m venv $(VENV)
+	python3 -m venv $(VENV)
 	$(PIP) install --upgrade pip
 	$(PIP) install -r requirements.txt
 	@echo "패키지 설치가 완료되었습니다."
