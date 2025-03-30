@@ -98,3 +98,86 @@ async def recognize_file(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Recognition failed: {str(e)}") 
+
+
+
+@router.post("/file/android/3gp")
+async def recognize_file(file: UploadFile = File(...)):
+    """음성 파일을 업로드하여 텍스트로 변환합니다."""
+    if not file.filename.lower().endswith('.3gp'):  # .wav에서 .3gp로 변경
+        raise HTTPException(status_code=400, detail="Only 3GP files are supported")
+    
+    try:
+        # 임시 파일로 저장
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.3gp') as temp_file:  # .wav에서 .3gp로 변경
+            content = await file.read()
+            temp_file.write(content)
+            temp_path = temp_file.name
+        
+        try:
+            # 3GP 파일을 WAV로 변환
+            wav_path = temp_path.replace('.3gp', '.wav')
+            convert_3gp_to_wav(temp_path, wav_path)
+            
+            # WAV 파일 검증 및 파라미터 추출
+            audio_params = validate_wav_file(wav_path)
+            
+            # 음성 인식 수행
+            with wave.open(wav_path, "rb") as wf:
+                audio_data = wf.readframes(wf.getnframes())
+                stt = get_stt_instance()
+                result = stt.recognize(
+                    audio_data,
+                    sample_rate=audio_params["sample_rate"],
+                    channels=audio_params["channels"],
+                    sample_width=audio_params["sample_width"]
+                )
+                
+                if not result["text"]:
+                    return Response(
+                        status_code=204,
+                        content=None,
+                        headers={
+                            "Content-Length": "0",
+                            "Content-Type": "application/json"
+                        }
+                    )
+                
+                # JSON 문자열로 변환
+                json_str = json.dumps(result)
+                
+                return Response(
+                    content=json_str,
+                    media_type="application/json",
+                    headers={
+                        "Content-Length": str(len(json_str)),
+                        "Content-Type": "application/json"
+                    }
+                )
+                
+        finally:
+            # 임시 파일 삭제
+            os.unlink(temp_path)
+            if os.path.exists(wav_path):
+                os.unlink(wav_path)
+            
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Recognition failed: {str(e)}")
+
+def convert_3gp_to_wav(input_path: str, output_path: str):
+    """3GP 파일을 WAV로 변환합니다."""
+    try:
+        # ffmpeg를 사용하여 변환
+        import subprocess
+        subprocess.run([
+            'ffmpeg',
+            '-i', input_path,
+            '-acodec', 'pcm_s16le',
+            '-ar', '16000',
+            '-ac', '1',
+            output_path
+        ], check=True)
+    except subprocess.CalledProcessError as e:
+        raise ValueError(f"Failed to convert 3GP to WAV: {str(e)}")
