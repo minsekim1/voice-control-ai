@@ -3,6 +3,8 @@ import json
 import os
 import wave
 import io
+import tempfile
+import ffmpeg
 from typing import Dict, Any, Optional
 
 class NaverSTTError(Exception):
@@ -31,6 +33,49 @@ class NaverSTT:
         self.api_url = "https://naveropenapi.apigw.ntruss.com/recog/v1/stt"
         self.client_id = client_id
         self.client_secret = client_secret
+        
+    def convert_to_wav(self, audio_data: bytes, format: str = "3gp") -> bytes:
+        """
+        오디오 파일을 WAV 형식으로 변환
+        
+        Args:
+            audio_data: 원본 오디오 데이터
+            format: 원본 오디오 형식 (3gp, mp3 등)
+            
+        Returns:
+            bytes: WAV 형식의 오디오 데이터
+        """
+        try:
+            # 임시 파일 생성
+            with tempfile.NamedTemporaryFile(delete=False, suffix=f'.{format}') as input_file:
+                input_file.write(audio_data)
+                input_path = input_file.name
+            
+            output_path = input_path.replace(f'.{format}', '.wav')
+            
+            # ffmpeg를 사용하여 WAV로 변환
+            stream = ffmpeg.input(input_path)
+            stream = ffmpeg.output(
+                stream,
+                output_path,
+                acodec='pcm_s16le',
+                ac=1,
+                ar=16000
+            )
+            ffmpeg.run(stream, capture_stdout=True, capture_stderr=True)
+            
+            # 변환된 WAV 파일 읽기
+            with open(output_path, 'rb') as f:
+                wav_data = f.read()
+            
+            # 임시 파일 삭제
+            os.unlink(input_path)
+            os.unlink(output_path)
+            
+            return wav_data
+            
+        except Exception as e:
+            raise NaverSTTError(f"오디오 변환 중 오류 발생: {str(e)}")
         
     def validate_audio_file(self, audio_data: bytes) -> Dict[str, Any]:
         """
@@ -80,16 +125,18 @@ class NaverSTT:
             raise NaverSTTError("유효하지 않은 WAV 파일입니다")
             
     def recognize(self, audio_data: bytes, sample_rate: int = 16000, 
-                 channels: int = 1, sample_width: int = 2, lang: str = "Kor") -> Dict[str, Any]:
+                 channels: int = 1, sample_width: int = 2, lang: str = "Kor",
+                 format: str = "wav") -> Dict[str, Any]:
         """
         음성 데이터를 텍스트로 변환
         
         Args:
-            audio_data: WAV 형식의 바이너리 음성 데이터
+            audio_data: 오디오 데이터
             sample_rate: 샘플링 레이트 (기본값: 16000)
             channels: 채널 수 (기본값: 1, 모노)
             sample_width: 샘플 너비 (기본값: 2, 16-bit)
             lang: 인식할 언어 (Kor, Eng, Jpn, Chn)
+            format: 오디오 형식 (wav, 3gp 등)
             
         Returns:
             Dict[str, Any]: 인식 결과를 담은 딕셔너리
@@ -105,6 +152,10 @@ class NaverSTT:
             # 언어 검증
             if lang not in self.SUPPORTED_LANGUAGES:
                 raise NaverSTTError(f"지원하지 않는 언어입니다: {lang}")
+            
+            # WAV로 변환
+            if format.lower() != "wav":
+                audio_data = self.convert_to_wav(audio_data, format)
             
             # 오디오 파일 검증
             audio_info = self.validate_audio_file(audio_data)
