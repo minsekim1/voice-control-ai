@@ -1,6 +1,4 @@
 # 환경 변수
-.env
-.env.*
 
 # 테스트 오디오
 tests/audio/

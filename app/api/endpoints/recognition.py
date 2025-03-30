@@ -44,6 +44,7 @@ def validate_wav_file(file_path):
 async def recognize_file(file: UploadFile = File(...)):
     """음성 파일을 업로드하여 텍스트로 변환합니다."""
     if not file.filename.lower().endswith('.wav'):
+        print(file.filename)
         raise HTTPException(status_code=400, detail="Only WAV files are supported")
     
     try:
@@ -105,6 +106,7 @@ async def recognize_file(file: UploadFile = File(...)):
 async def recognize_file(file: UploadFile = File(...)):
     """음성 파일을 업로드하여 텍스트로 변환합니다."""
     if not file.filename.lower().endswith('.3gp'):  # .wav에서 .3gp로 변경
+        print(file.filename)
         raise HTTPException(status_code=400, detail="Only 3GP files are supported")
     
     try:
