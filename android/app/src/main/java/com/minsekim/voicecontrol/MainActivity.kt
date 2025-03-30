@@ -4,11 +4,15 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.minsekim.voicecontrol.ui.theme.VoicecontrolTheme
 
@@ -45,7 +49,7 @@ fun MainScreen() {
                 .padding(paddingValues)
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
             Button(
                 onClick = { showServerIpDialog = true },
@@ -53,6 +57,24 @@ fun MainScreen() {
             ) {
                 Text("서버 IP 입력하기")
             }
+
+            Button(
+                onClick = { /* TODO: 음성 인식 로직 구현 */ },
+                modifier = Modifier
+                    .size(80.dp)
+                    .clip(CircleShape),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.ic_mic),
+                    contentDescription = "음성 녹음",
+                    modifier = Modifier.size(32.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
         }
 
         if (showServerIpDialog) {
